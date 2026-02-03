@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, Eye } from "lucide-react";
+import { Heart, Eye, ShoppingBag } from "lucide-react";
 import { Product } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/contexts/CartContext";
 
 interface ProductCardProps {
   product: Product;
@@ -25,6 +27,7 @@ const conditionLabel = {
 } as const;
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
+  const { addToCart } = useCart();
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
@@ -62,8 +65,22 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               </Badge>
             )}
 
+            {/* Quick add to cart button */}
+            <Button
+              variant="glass"
+              size="icon"
+              className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                addToCart(product);
+              }}
+            >
+              <ShoppingBag className="w-4 h-4" />
+            </Button>
+
             {/* Quick stats overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="absolute bottom-0 left-0 right-16 bg-gradient-to-t from-foreground/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <div className="flex items-center gap-4 text-background text-sm">
                 <span className="flex items-center gap-1">
                   <Heart className="w-4 h-4" />

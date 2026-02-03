@@ -13,12 +13,15 @@ import {
   ChevronRight,
   Package,
   Ruler,
+  ShoppingBag,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { mockProducts } from "@/data/mockData";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 const conditionVariant = {
   new: "condition-new",
@@ -38,6 +41,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [currentImage, setCurrentImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const { addToCart } = useCart();
 
   const product = mockProducts.find((p) => p.id === id) || mockProducts[0];
   const discount = product.originalPrice
@@ -229,8 +233,17 @@ export default function ProductDetail() {
 
             {/* Actions */}
             <div className="flex gap-3">
-              <Button variant="hero" size="lg" className="flex-1">
-                Buy Now
+              <Button
+                variant="hero"
+                size="lg"
+                className="flex-1"
+                onClick={() => {
+                  addToCart(product);
+                  toast.success("Added to bag!");
+                }}
+              >
+                <ShoppingBag className="w-5 h-5 mr-2" />
+                Add to Bag
               </Button>
               {product.allowOffers && (
                 <Button variant="outline" size="lg" className="flex-1">
