@@ -25,10 +25,13 @@ export function Header() {
           <Link to="/" className="flex items-center gap-2">
             <motion.div
               whileHover={{ rotate: -5, scale: 1.05 }}
-              className="text-2xl font-display font-bold tracking-tight"
+              className="flex items-center gap-2"
             >
-              <span className="text-primary">Thrift</span>
-              <span className="text-foreground">Verse</span>
+              <img src="/favicon.png" alt="ThriftVerse" className="w-8 h-8 rounded-lg" />
+              <span className="text-xl font-display font-bold tracking-tight">
+                <span className="text-primary">Thrift</span>
+                <span className="text-foreground">Verse</span>
+              </span>
             </motion.div>
           </Link>
 
