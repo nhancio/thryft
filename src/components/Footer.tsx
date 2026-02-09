@@ -9,8 +9,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="text-2xl font-display font-bold">
-              <span className="text-primary">Thrift</span>
-              <span className="text-background">Verse</span>
+              <span className="text-primary">Thryft</span>
             </Link>
             <p className="text-background/70 text-sm mt-4 max-w-xs">
               The Gen Z marketplace for unique finds. Thrifting made fresh, sustainable, and social.
@@ -63,7 +62,7 @@ export function Footer() {
 
         <div className="border-t border-background/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-background/50">
-            © 2024 ThriftVerse. All rights reserved.
+            © 2024 Thryft. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-background/50">
             <Link to="/privacy" className="hover:text-background transition-colors">Privacy</Link>

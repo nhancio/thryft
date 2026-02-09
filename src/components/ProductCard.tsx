@@ -1,11 +1,20 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, Eye, ShoppingBag } from "lucide-react";
+import { Heart, Eye } from "lucide-react";
 import { Product } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/contexts/CartContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface ProductCardProps {
   product: Product;
@@ -27,7 +36,6 @@ const conditionLabel = {
 } as const;
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const { addToCart } = useCart();
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
@@ -65,19 +73,36 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               </Badge>
             )}
 
-            {/* Quick add to cart button */}
-            <Button
-              variant="glass"
-              size="icon"
-              className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                addToCart(product);
-              }}
-            >
-              <ShoppingBag className="w-4 h-4" />
-            </Button>
+            {/* Notify me button */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="glass"
+                  size="sm"
+                  className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-3 text-xs font-medium"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  Notify me
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Get notified</DialogTitle>
+                  <DialogDescription>
+                    Please provide your number to get updates when similar pieces drop on Thryft.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <Input type="tel" placeholder="Enter your phone number" />
+                </div>
+                <DialogFooter className="mt-4">
+                  <Button className="w-full">Submit</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             {/* Quick stats overlay */}
             <div className="absolute bottom-0 left-0 right-16 bg-gradient-to-t from-foreground/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

@@ -22,20 +22,57 @@ export function WhatIsThrift() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-6">
-              What is <span className="gradient-text">Thrifting</span>?
+              So… <span className="gradient-text">You Still Pay Full Price?</span>?
             </h2>
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Thrifting is the smart way to shop. It's about finding premium, pre-owned items 
-              at a fraction of their original price. From the latest iPhones to luxury cars, 
-              we bring you verified, high-quality products that have been carefully inspected 
-              and authenticated.
-            </p>
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Join millions who've discovered that owning premium doesn't mean paying premium. 
-              It's not just shopping—it's a lifestyle choice that's good for your wallet and 
-              great for the planet.
-            </p>
-            
+            <div className="space-y-6 mb-8">
+              <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-amber-50 via-background to-primary/10 p-6 md:p-8 shadow-lg">
+                <div className="absolute -top-6 -right-4 text-7xl font-black text-primary/10 select-none">
+                  ✶
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-4">
+                  The Thryft Story
+                </p>
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                  Someone <span className="font-semibold text-foreground">bought it</span>, wore it once, forgot about it.
+                  <br />
+                  You find it. You style it. You own it.
+                </p>
+                <p className="mt-4 text-base md:text-lg leading-relaxed">
+                  Why pay{" "}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-foreground text-background px-3 py-1 text-sm md:text-base font-semibold">
+                    ₹2999
+                  </span>{" "}
+                  when you can pay{" "}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/90 text-primary-foreground px-3 py-1 text-sm md:text-base font-semibold">
+                    ₹699
+                  </span>{" "}
+                  and still look better?
+                  <span className="ml-1 font-semibold text-primary">Exactly.</span>
+                </p>
+              </div>
+
+              <div className="relative overflow-hidden rounded-3xl border border-border bg-background/80 p-6 md:p-8 backdrop-blur">
+                <div className="absolute inset-y-4 left-0 w-1 rounded-full bg-primary/60" />
+                <div className="pl-4 md:pl-6">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                    Why Thrift?
+                  </p>
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                    paying extra for the same thing is a{" "}
+                    <span className="font-semibold text-foreground">bold choice</span>.
+                    thrift is getting the same brands for{" "}
+                    <span className="font-semibold text-primary">half the price</span>.
+                  </p>
+                  <p className="mt-3 text-base md:text-lg text-muted-foreground leading-relaxed">
+                    no magic, just{" "}
+                    <span className="font-semibold text-foreground">common sense</span>.
+                    couldn’t be us —{" "}
+                    <span className="font-semibold text-primary">respectfully</span>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Benefits List */}
             <div className="grid sm:grid-cols-2 gap-4">
               {benefits.map((benefit, index) => (

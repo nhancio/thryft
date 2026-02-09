@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,8 +8,6 @@
    Gen Z focused: bold, playful, eco-conscious
    All colors in HSL format
 */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -150,12 +150,22 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display font-bold tracking-tight;
+  }
+
+  .container {
+    @apply px-4 md:px-8 mx-auto;
   }
 }
 
 @layer components {
+
   /* Glass card effect */
   .glass-card {
     @apply bg-card/70 backdrop-blur-xl border border-white/20 shadow-lg;
@@ -205,11 +215,13 @@
 }
 
 @layer utilities {
+
   /* Custom scrollbar */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }

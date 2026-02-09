@@ -26,11 +26,7 @@ export function Header() {
               whileHover={{ rotate: -5, scale: 1.05 }}
               className="flex items-center gap-2"
             >
-              <img src="/favicon.png" alt="ThriftVerse" className="w-8 h-8 rounded-lg" />
-              <span className="text-xl font-display font-bold tracking-tight">
-                <span className="text-primary">Thrift</span>
-                <span className="text-foreground">Verse</span>
-              </span>
+              <img src="/images/logo.png" alt="Thryft" className="h-14 w-auto rounded-lg" />
             </motion.div>
           </Link>
 

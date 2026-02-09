@@ -62,7 +62,7 @@ export function Categories() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+        <div className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 px-4 md:px-0 -mx-4 md:mx-0 scrollbar-hide">
           {categories.map((category, index) => (
             <motion.div
               key={category.slug}
@@ -70,12 +70,13 @@ export function Categories() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
+              className="min-w-[160px] md:min-w-0 flex-1 snap-center first:pl-4 last:pr-4 md:first:pl-0 md:last:pr-0"
             >
               <Link
                 to={`/browse?category=${category.slug}`}
-                className="group block"
+                className="group block h-full"
               >
-                <div className="relative rounded-2xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="relative rounded-2xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all duration-300 h-full">
                   <div className="aspect-square">
                     <img
                       src={category.image}
@@ -84,11 +85,11 @@ export function Categories() {
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="text-background font-semibold text-lg">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+                    <h3 className="text-background font-semibold text-base md:text-lg">
                       {category.name}
                     </h3>
-                    <p className="text-background/70 text-sm">
+                    <p className="text-background/70 text-xs md:text-sm">
                       {category.itemCount} items
                     </p>
                   </div>

@@ -17,20 +17,14 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const steps = [
-  { id: 1, title: "Photos", description: "Add at least 3 photos" },
-  { id: 2, title: "Details", description: "Describe your item" },
-  { id: 3, title: "Pricing", description: "Set your price" },
-  { id: 4, title: "Publish", description: "Review & list" },
+  { id: 1, title: "Category", description: "Choose product type" },
+  { id: 2, title: "Photos", description: "Add at least 3 photos" },
+  { id: 3, title: "Details", description: "Describe your item" },
+  { id: 4, title: "Pricing", description: "Set your price" },
+  { id: 5, title: "Publish", description: "Review & list" },
 ];
 
-const categories = [
-  "Tops",
-  "Bottoms",
-  "Dresses",
-  "Outerwear",
-  "Shoes",
-  "Accessories",
-];
+const categories = ["iPhone", "MacBook", "Accessories", "Car"];
 const conditions = ["New with tags", "New", "Like new", "Gently used", "Worn"];
 const sizes = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
 const eras = ["2020s", "2010s", "2000s", "90s", "80s", "70s", "Vintage"];
@@ -69,7 +63,7 @@ export default function Sell() {
   };
 
   const nextStep = () => {
-    if (currentStep < 4) setCurrentStep(currentStep + 1);
+    if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -79,15 +73,16 @@ export default function Sell() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return photos.length >= 3;
+        return !!formData.category;
       case 2:
+        return photos.length >= 3;
+      case 3:
         return (
           formData.title &&
-          formData.category &&
           formData.size &&
           formData.condition
         );
-      case 3:
+      case 4:
         return formData.price && Number(formData.price) > 0;
       default:
         return true;
@@ -107,7 +102,7 @@ export default function Sell() {
               <motion.div
                 className="h-full bg-primary"
                 initial={{ width: "0%" }}
-                animate={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+                animate={{ width: `${((currentStep - 1) / 4) * 100}%` }}
               />
             </div>
 
@@ -159,8 +154,42 @@ export default function Sell() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            {/* Step 1: Photos */}
+            {/* Step 1: Category */}
             {currentStep === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-display font-bold mb-2">
+                    What are you selling?
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Choose the category that best fits your item.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        setFormData({ ...formData, category: cat });
+                        nextStep();
+                      }}
+                      className={cn(
+                        "h-32 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all hover:scale-[1.02]",
+                        formData.category === cat
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50 bg-card"
+                      )}
+                    >
+                      <span className="text-lg font-semibold">{cat}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Photos */}
+            {currentStep === 2 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-display font-bold mb-2">
@@ -238,8 +267,8 @@ export default function Sell() {
               </div>
             )}
 
-            {/* Step 2: Details */}
-            {currentStep === 2 && (
+            {/* Step 3: Details */}
+            {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-display font-bold mb-2">
@@ -261,33 +290,12 @@ export default function Sell() {
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
                     }
-                    placeholder="Brand + Item + Key detail (e.g., Vintage Levi's 501 High-waist)"
+                    placeholder="Brand + Item + Key detail (e.g., MacBook Pro M1 2020)"
                     className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     {formData.title.length}/80 characters
                   </p>
-                </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Category *
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((cat) => (
-                      <Button
-                        key={cat}
-                        variant={formData.category === cat ? "default" : "tag"}
-                        size="sm"
-                        onClick={() =>
-                          setFormData({ ...formData, category: cat })
-                        }
-                      >
-                        {cat}
-                      </Button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Brand */}
@@ -299,7 +307,7 @@ export default function Sell() {
                     onChange={(e) =>
                       setFormData({ ...formData, brand: e.target.value })
                     }
-                    placeholder="e.g., Levi's, Nike, Unknown"
+                    placeholder="e.g., Apple, Dell, Unknown"
                     className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
@@ -393,8 +401,8 @@ export default function Sell() {
               </div>
             )}
 
-            {/* Step 3: Pricing */}
-            {currentStep === 3 && (
+            {/* Step 4: Pricing */}
+            {currentStep === 4 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-display font-bold mb-2">
@@ -529,8 +537,8 @@ export default function Sell() {
               </div>
             )}
 
-            {/* Step 4: Review & Publish */}
-            {currentStep === 4 && (
+            {/* Step 5: Review & Publish */}
+            {currentStep === 5 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-display font-bold mb-2">

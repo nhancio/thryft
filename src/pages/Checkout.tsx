@@ -59,7 +59,7 @@ export default function Checkout() {
               Order Confirmed!
             </h1>
             <p className="text-muted-foreground mb-8">
-              Thank you for shopping at ThriftVerse. Your thrift finds are on
+              Thank you for shopping at Thryft. Your thrift finds are on
               their way! You'll receive an email confirmation shortly.
             </p>
             <div className="space-y-3">

@@ -13,15 +13,22 @@ import {
   ChevronRight,
   Package,
   Ruler,
-  ShoppingBag,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { mockProducts } from "@/data/mockData";
-import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const conditionVariant = {
   new: "condition-new",
@@ -41,13 +48,14 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [currentImage, setCurrentImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
-  const { addToCart } = useCart();
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const product = mockProducts.find((p) => p.id === id) || mockProducts[0];
   const discount = product.originalPrice
     ? Math.round(
-        ((product.originalPrice - product.price) / product.originalPrice) * 100
-      )
+      ((product.originalPrice - product.price) / product.originalPrice) * 100
+    )
     : null;
 
   const nextImage = () => {
@@ -82,11 +90,11 @@ export default function ProductDetail() {
           / <span className="text-foreground">{product.brand}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 pb-24 lg:pb-0">
           {/* Image Gallery */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted">
+            <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted touch-pan-y">
               <motion.img
                 key={currentImage}
                 initial={{ opacity: 0 }}
@@ -96,13 +104,13 @@ export default function ProductDetail() {
                 className="w-full h-full object-cover"
               />
 
-              {/* Navigation Arrows */}
+              {/* Navigation Arrows - Larger hit areas for mobile */}
               {product.images.length > 1 && (
                 <>
                   <Button
                     variant="glass"
                     size="icon"
-                    className="absolute left-3 top-1/2 -translate-y-1/2"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 md:h-9 md:w-9"
                     onClick={prevImage}
                   >
                     <ChevronLeft className="w-5 h-5" />
@@ -110,7 +118,7 @@ export default function ProductDetail() {
                   <Button
                     variant="glass"
                     size="icon"
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 md:h-9 md:w-9"
                     onClick={nextImage}
                   >
                     <ChevronRight className="w-5 h-5" />
@@ -134,16 +142,15 @@ export default function ProductDetail() {
 
             {/* Thumbnails */}
             {product.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
                 {product.images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentImage(i)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 shrink-0 transition-all ${
-                      currentImage === i
+                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 shrink-0 transition-all snap-start ${currentImage === i
                         ? "border-primary"
                         : "border-transparent opacity-60 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     <img
                       src={img}
@@ -231,25 +238,25 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <Button
-                variant="hero"
-                size="lg"
-                className="flex-1"
-                onClick={() => {
-                  addToCart(product);
-                  toast.success("Added to bag!");
-                }}
-              >
-                <ShoppingBag className="w-5 h-5 mr-2" />
-                Add to Bag
-              </Button>
-              {product.allowOffers && (
-                <Button variant="outline" size="lg" className="flex-1">
-                  Make Offer
+            {/* Actions - Sticky on mobile */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-40 lg:static lg:p-0 lg:bg-transparent lg:border-0">
+              <div className="container lg:p-0 flex gap-3">
+                <Button
+                  variant="hero"
+                  size="lg"
+                  className="flex-1 shadow-lg lg:shadow-none"
+                  onClick={() => {
+                    setNotifyOpen(true);
+                  }}
+                >
+                  Notify me
                 </Button>
-              )}
+                {product.allowOffers && (
+                  <Button variant="outline" size="lg" className="flex-1 hidden md:flex">
+                    Make Offer
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-3">
@@ -260,9 +267,8 @@ export default function ProductDetail() {
                 onClick={() => setIsLiked(!isLiked)}
               >
                 <Heart
-                  className={`w-5 h-5 mr-2 ${
-                    isLiked ? "fill-destructive text-destructive" : ""
-                  }`}
+                  className={`w-5 h-5 mr-2 ${isLiked ? "fill-destructive text-destructive" : ""
+                    }`}
                 />
                 {isLiked ? "Saved" : "Save"}
               </Button>
@@ -298,6 +304,38 @@ export default function ProductDetail() {
                 </div>
               )}
             </div>
+
+            {/* Notify me dialog */}
+            <Dialog open={notifyOpen} onOpenChange={setNotifyOpen}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Get notified</DialogTitle>
+                  <DialogDescription>
+                    Please provide your number to get updates when similar pieces drop on Thryft.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <Input
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                </div>
+                <DialogFooter className="mt-4">
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setNotifyOpen(false);
+                      setPhoneNumber("");
+                      toast.success("We’ll notify you with future drops.");
+                    }}
+                  >
+                    Submit
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             {/* Description */}
             <div>
