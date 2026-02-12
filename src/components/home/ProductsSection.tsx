@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { mockProducts } from "@/data/mockData";
+import { useProducts } from "@/hooks/useProducts";
 
 export function ProductsSection() {
+  const { products } = useProducts();
   return (
     <section className="py-16 md:py-24">
       <div className="container">
@@ -27,7 +28,7 @@ export function ProductsSection() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {mockProducts.slice(0, 8).map((product, i) => (
+          {products.slice(0, 8).map((product, i) => (
             <ProductCard key={product.id} product={product} index={i} />
           ))}
         </div>

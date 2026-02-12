@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Camera,
@@ -24,14 +24,18 @@ const steps = [
   { id: 5, title: "Publish", description: "Review & list" },
 ];
 
-const categories = ["iPhone", "MacBook", "Accessories", "Car"];
+const categories = ["iPhone", "MacBook", "Watch"];
 const conditions = ["New with tags", "New", "Like new", "Gently used", "Worn"];
 const sizes = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
+const iphoneSizes = ["64GB", "128GB", "256GB", "512GB", "1TB"];
+const macbookSizes = ["128GB", "256GB", "512GB", "1TB", "2TB"];
+const watchSizes = ["38mm", "40mm", "41mm", "44mm", "45mm", "49mm"];
 const eras = ["2020s", "2010s", "2000s", "90s", "80s", "70s", "Vintage"];
 
 export default function Sell() {
   const [currentStep, setCurrentStep] = useState(1);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -44,22 +48,35 @@ export default function Sell() {
     allowOffers: true,
     shippingIncluded: false,
     localPickup: false,
+    // Category-specific (iPhone)
+    storage: "",
+    model: "",
+    batteryHealth: "",
+    // MacBook
+    ram: "",
+    chip: "",
+    // Watch
+    cellular: "",
   });
 
-  const handlePhotoUpload = () => {
-    // Simulate photo upload
-    const demoPhotos = [
-      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400",
-      "https://images.unsplash.com/photo-1602810319428-019690571b5b?w=400",
-      "https://images.unsplash.com/photo-1602810320073-1230c46d89d4?w=400",
-    ];
-    if (photos.length < 6) {
-      setPhotos([...photos, demoPhotos[photos.length % 3]]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    const newUrls: string[] = [];
+    for (let i = 0; i < files.length && photos.length + newUrls.length < 6; i++) {
+      newUrls.push(URL.createObjectURL(files[i]));
     }
+    setPhotos((prev) => [...prev, ...newUrls].slice(0, 6));
+    e.target.value = "";
   };
 
   const removePhoto = (index: number) => {
-    setPhotos(photos.filter((_, i) => i !== index));
+    setPhotos((prev) => {
+      if (prev[index]?.startsWith("blob:")) URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const nextStep = () => {
@@ -145,7 +162,30 @@ export default function Sell() {
           </div>
         </div>
 
-        {/* Step Content */}
+        {/* Success state after publish */}
+        {submitted ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-12 px-6 rounded-3xl border border-primary/20 bg-primary/5"
+          >
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
+              <Check className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-display font-bold mb-2">Listing submitted</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Your product is sent for verification. Sit back and chill now — we’ll notify you once it’s live.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-8"
+              onClick={() => { setSubmitted(false); setCurrentStep(1); setPhotos([]); setFormData({ title: "", category: "", brand: "", size: "", condition: "", era: "", description: "", price: "", allowOffers: true, shippingIncluded: false, localPickup: false, storage: "", model: "", batteryHealth: "", ram: "", chip: "", cellular: "" }); }}
+            >
+              List another item
+            </Button>
+          </motion.div>
+        ) : (
+        <>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -200,7 +240,14 @@ export default function Sell() {
                   </p>
                 </div>
 
-                {/* Photo Grid */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handlePhotoUpload}
+                />
                 <div className="grid grid-cols-3 gap-3">
                   {[...Array(6)].map((_, i) => (
                     <div
@@ -220,6 +267,7 @@ export default function Sell() {
                             className="w-full h-full object-cover"
                           />
                           <button
+                            type="button"
                             onClick={() => removePhoto(i)}
                             className="absolute top-2 right-2 w-6 h-6 rounded-full bg-foreground/80 text-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           >
@@ -233,7 +281,8 @@ export default function Sell() {
                         </div>
                       ) : (
                         <button
-                          onClick={handlePhotoUpload}
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
                           className="w-full h-full flex flex-col items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {i === 0 ? (
@@ -312,28 +361,106 @@ export default function Sell() {
                   />
                 </div>
 
-                {/* Size & Condition Row */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Size *
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {sizes.map((size) => (
-                        <Button
-                          key={size}
-                          variant={formData.size === size ? "default" : "tag"}
-                          size="sm"
-                          onClick={() =>
-                            setFormData({ ...formData, size: size })
-                          }
-                        >
-                          {size}
-                        </Button>
-                      ))}
-                    </div>
+                {/* Size - dynamic by category */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {formData.category === "iPhone" ? "Storage" : formData.category === "MacBook" ? "Storage" : formData.category === "Watch" ? "Case size" : "Size"} *
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.category === "iPhone"
+                      ? iphoneSizes
+                      : formData.category === "MacBook"
+                        ? macbookSizes
+                        : formData.category === "Watch"
+                          ? watchSizes
+                          : sizes
+                    ).map((size) => (
+                      <Button
+                        key={size}
+                        variant={formData.size === size ? "default" : "tag"}
+                        size="sm"
+                        onClick={() => setFormData({ ...formData, size })}
+                      >
+                        {size}
+                      </Button>
+                    ))}
                   </div>
                 </div>
+
+                {/* iPhone-specific */}
+                {formData.category === "iPhone" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Model (e.g. 14 Pro, 15)</label>
+                      <input
+                        type="text"
+                        value={formData.model}
+                        onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                        placeholder="e.g. iPhone 14 Pro"
+                        className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Battery health (%)</label>
+                      <input
+                        type="text"
+                        value={formData.batteryHealth}
+                        onChange={(e) => setFormData({ ...formData, batteryHealth: e.target.value })}
+                        placeholder="e.g. 87"
+                        className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* MacBook-specific */}
+                {formData.category === "MacBook" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">RAM</label>
+                      <input
+                        type="text"
+                        value={formData.ram}
+                        onChange={(e) => setFormData({ ...formData, ram: e.target.value })}
+                        placeholder="e.g. 8GB, 16GB"
+                        className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Chip</label>
+                      <input
+                        type="text"
+                        value={formData.chip}
+                        onChange={(e) => setFormData({ ...formData, chip: e.target.value })}
+                        placeholder="e.g. M1, M2, M4"
+                        className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Watch-specific */}
+                {formData.category === "Watch" && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Cellular?</label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={formData.cellular === "Yes" ? "default" : "tag"}
+                        size="sm"
+                        onClick={() => setFormData({ ...formData, cellular: "Yes" })}
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        variant={formData.cellular === "No" ? "default" : "tag"}
+                        size="sm"
+                        onClick={() => setFormData({ ...formData, cellular: "No" })}
+                      >
+                        No
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Condition */}
                 <div>
@@ -632,7 +759,7 @@ export default function Sell() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation */}
+        {/* Navigation - hidden when submitted */}
         <div className="flex justify-between mt-8 pt-6 border-t border-border">
           <Button
             variant="ghost"
@@ -643,22 +770,28 @@ export default function Sell() {
             Back
           </Button>
 
-          {currentStep < 4 ? (
+          {currentStep < 5 ? (
             <Button
               variant="hero"
-              onClick={nextStep}
+              onClick={currentStep === 4 ? nextStep : nextStep}
               disabled={!canProceed()}
             >
-              Continue
+              {currentStep === 4 ? "Review" : "Continue"}
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (
-            <Button variant="hero" disabled={!canProceed()}>
+            <Button
+              variant="hero"
+              disabled={!canProceed()}
+              onClick={() => setSubmitted(true)}
+            >
               Publish Listing
               <Sparkles className="w-4 h-4 ml-2" />
             </Button>
           )}
         </div>
+        </>
+        )}
       </main>
 
       <Footer />

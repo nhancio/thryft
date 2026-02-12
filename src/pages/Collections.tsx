@@ -3,10 +3,20 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { mockCollections, mockProducts } from "@/data/mockData";
+import { useProducts } from "@/hooks/useProducts";
 import { ProductCard } from "@/components/ProductCard";
+import { CATEGORY_FILTERS } from "@/types/product";
+
+const CATEGORY_IMAGES: Record<string, string> = {
+  iPhone: "https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=800",
+  MacBook: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800",
+  Watch: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=800",
+};
 
 const Collections = () => {
+  const { products, categoryCounts } = useProducts();
+  const categoryCards = CATEGORY_FILTERS.filter((c) => c.name !== "All");
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -20,45 +30,43 @@ const Collections = () => {
             className="text-center max-w-2xl mx-auto"
           >
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4">
-              Curated Collections
+              Categories
             </h1>
             <p className="text-muted-foreground text-lg">
-              Handpicked styles for every vibe. Explore our carefully curated collections 
-              and find your perfect thrift.
+              Browse by category. iPhone, MacBook, Watch and more.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Collections Grid */}
+      {/* Categories Grid - from Supabase counts */}
       <section className="pb-16">
         <div className="container">
-          <div className="grid md:grid-cols-2 gap-6">
-            {mockCollections.map((collection, i) => (
+          <div className="grid md:grid-cols-3 gap-6">
+            {categoryCards.map((cat, i) => (
               <motion.div
-                key={collection.id}
+                key={cat.name}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
               >
                 <Link
-                  to={`/browse?collection=${collection.slug}`}
+                  to={`/browse?category=${cat.name}`}
                   className="group block relative rounded-3xl overflow-hidden aspect-[16/9]"
                 >
                   <img
-                    src={collection.image}
-                    alt={collection.title}
+                    src={CATEGORY_IMAGES[cat.name] ?? ""}
+                    alt={cat.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/40 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
                     <h2 className="text-2xl md:text-3xl font-display font-bold text-background mb-2">
-                      {collection.title}
+                      {cat.name}
                     </h2>
-                    <p className="text-background/80 mb-4">{collection.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-background/70">
-                        {collection.itemCount} items
+                        {categoryCounts[cat.name] ?? 0} items
                       </span>
                       <span className="flex items-center gap-2 text-sm font-medium text-background group-hover:gap-3 transition-all">
                         Explore
@@ -94,7 +102,7 @@ const Collections = () => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {mockProducts.map((product, i) => (
+            {products.map((product, i) => (
               <ProductCard key={product.id} product={product} index={i} />
             ))}
           </div>

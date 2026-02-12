@@ -16,7 +16,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockProducts, mockSellers } from "@/data/mockData";
+import { useAuth } from "@/hooks/useAuth";
+import { useProducts } from "@/hooks/useProducts";
 
 const tabs = [
   { id: "closet", label: "My Closet", icon: Package },
@@ -27,7 +28,26 @@ const tabs = [
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("closet");
-  const user = mockSellers[0]; // Using mock seller as user
+  const { user } = useAuth();
+  const { products } = useProducts();
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-12 text-center">
+          <p className="text-muted-foreground mb-4">Sign in to view your profile.</p>
+          <Link to="/">
+            <Button variant="hero">Go home</Button>
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  const displayName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email ?? "User";
+  const avatarUrl = user.user_metadata?.avatar_url ?? "";
+  const email = user.email ?? "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,37 +56,28 @@ export default function Profile() {
       <main className="container py-6">
         {/* Profile Header */}
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-24 h-24 rounded-full"
-          />
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayName} className="w-24 h-24 rounded-full" />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-2xl font-bold text-muted-foreground">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="flex-1 text-center md:text-left">
             <div className="flex items-center gap-2 justify-center md:justify-start">
-              <h1 className="text-2xl font-display font-bold">{user.name}</h1>
-              {user.verified && (
-                <Badge variant="verified">Verified</Badge>
-              )}
+              <h1 className="text-2xl font-display font-bold">{displayName}</h1>
             </div>
-            <p className="text-muted-foreground">{user.username}</p>
-            <p className="text-sm text-muted-foreground mt-1">{user.location}</p>
+            <p className="text-muted-foreground">{email}</p>
 
             {/* Stats */}
             <div className="flex gap-6 mt-4 justify-center md:justify-start">
               <div>
-                <div className="font-semibold">{user.totalSales}</div>
+                <div className="font-semibold">{products.filter((p) => p.listedByUid === user.id).length}</div>
+                <div className="text-sm text-muted-foreground">Listings</div>
+              </div>
+              <div>
+                <div className="font-semibold">—</div>
                 <div className="text-sm text-muted-foreground">Sales</div>
-              </div>
-              <div>
-                <div className="font-semibold flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-primary text-primary" />
-                  {user.rating}
-                </div>
-                <div className="text-sm text-muted-foreground">Rating</div>
-              </div>
-              <div>
-                <div className="font-semibold">1.2K</div>
-                <div className="text-sm text-muted-foreground">Followers</div>
               </div>
             </div>
           </div>
@@ -136,7 +147,7 @@ export default function Profile() {
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {mockProducts.slice(0, 4).map((product, i) => (
+              {products.slice(0, 4).map((product, i) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -167,7 +178,7 @@ export default function Profile() {
           <div>
             <h2 className="font-semibold mb-4">Saved Items</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {mockProducts.slice(2, 6).map((product, i) => (
+              {products.slice(2, 6).map((product, i) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -199,7 +210,7 @@ export default function Profile() {
           <div>
             <h2 className="font-semibold mb-4">Purchase History</h2>
             <div className="space-y-3">
-              {mockProducts.slice(0, 3).map((product, i) => (
+              {products.slice(0, 3).map((product, i) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, x: -10 }}

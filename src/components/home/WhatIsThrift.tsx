@@ -58,13 +58,13 @@ export function WhatIsThrift() {
                     Why Thrift?
                   </p>
                   <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-                    paying extra for the same thing is a{" "}
+                    Paying extra for the same thing is a{" "}
                     <span className="font-semibold text-foreground">bold choice</span>.
-                    thrift is getting the same brands for{" "}
+                    Thrift is getting the same brands for{" "}
                     <span className="font-semibold text-primary">half the price</span>.
                   </p>
                   <p className="mt-3 text-base md:text-lg text-muted-foreground leading-relaxed">
-                    no magic, just{" "}
+                    No magic, just{" "}
                     <span className="font-semibold text-foreground">common sense</span>.
                     couldn’t be us —{" "}
                     <span className="font-semibold text-primary">respectfully</span>.

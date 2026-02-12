@@ -29,10 +29,10 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Shop</h4>
             <nav className="flex flex-col gap-2 text-sm text-background/70">
               <Link to="/browse" className="hover:text-primary transition-colors">Browse All</Link>
-              <Link to="/collections" className="hover:text-primary transition-colors">Collections</Link>
-              <Link to="/browse?category=tops" className="hover:text-primary transition-colors">Tops</Link>
-              <Link to="/browse?category=bottoms" className="hover:text-primary transition-colors">Bottoms</Link>
-              <Link to="/browse?category=shoes" className="hover:text-primary transition-colors">Shoes</Link>
+              <Link to="/categories" className="hover:text-primary transition-colors">Categories</Link>
+              <Link to="/browse?category=iPhone" className="hover:text-primary transition-colors">iPhone</Link>
+              <Link to="/browse?category=MacBook" className="hover:text-primary transition-colors">MacBook</Link>
+              <Link to="/browse?category=Watch" className="hover:text-primary transition-colors">Watch</Link>
             </nav>
           </div>
 

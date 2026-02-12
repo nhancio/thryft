@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Eye } from "lucide-react";
-import { Product } from "@/data/mockData";
+import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -45,123 +44,107 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
+      className="w-full"
     >
       <Link to={`/product/${product.id}`} className="block group">
-        <div className="feed-card">
-          {/* Image Container */}
-          <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+        <div className="feed-card rounded-xl overflow-hidden border border-border/50 bg-card">
+          {/* Image */}
+          <div className="relative aspect-[4/5] overflow-hidden bg-muted">
             <img
               src={product.images[0]}
               alt={product.title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            
-            {/* Overlay badges */}
-            <div className="absolute top-3 left-3 flex flex-col gap-2">
-              <Badge variant={conditionVariant[product.condition]}>
+
+            {/* Badges top-left */}
+            <div className="absolute top-2 left-2 flex flex-col gap-1">
+              <Badge variant={conditionVariant[product.condition]} className="text-[10px] px-1.5 py-0">
                 {conditionLabel[product.condition]}
               </Badge>
               {product.era && (
-                <Badge variant="era">{product.era}</Badge>
+                <Badge variant="era" className="text-[10px] px-1.5 py-0">{product.era}</Badge>
               )}
             </div>
 
-            {/* Discount badge */}
-            {discount && (
-              <Badge variant="sale" className="absolute top-3 right-3">
+            {/* Status badge top-right */}
+            {product.status === "sold" ? (
+              <Badge className="absolute top-2 right-2 bg-foreground text-background text-[10px]">
+                Sold out
+              </Badge>
+            ) : product.status === "hold" ? (
+              <Badge className="absolute top-2 right-2 bg-amber-500 text-white text-[10px]">
+                On hold
+              </Badge>
+            ) : discount ? (
+              <Badge variant="sale" className="absolute top-2 right-2 text-[10px]">
                 -{discount}%
               </Badge>
+            ) : null}
+
+            {/* Notify me for hold */}
+            {product.status === "hold" && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-2.5 text-[10px] font-medium h-7"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  >
+                    Notify me
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Get notified</DialogTitle>
+                    <DialogDescription>
+                      Please provide your number to get updates when this item is available.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Input type="tel" placeholder="Enter your phone number" />
+                  <DialogFooter className="mt-4">
+                    <Button className="w-full">Submit</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             )}
 
-            {/* Notify me button */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="glass"
-                  size="sm"
-                  className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-3 text-xs font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                >
-                  Notify me
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-sm">
-                <DialogHeader>
-                  <DialogTitle>Get notified</DialogTitle>
-                  <DialogDescription>
-                    Please provide your number to get updates when similar pieces drop on Thryft.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-3">
-                  <Input type="tel" placeholder="Enter your phone number" />
+            {/* Hover stats */}
+            {product.status !== "sold" && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="flex items-center gap-3 text-background text-xs">
+                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{product.likes}</span>
+                  <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{product.views}</span>
                 </div>
-                <DialogFooter className="mt-4">
-                  <Button className="w-full">Submit</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Quick stats overlay */}
-            <div className="absolute bottom-0 left-0 right-16 bg-gradient-to-t from-foreground/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="flex items-center gap-4 text-background text-sm">
-                <span className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  {product.likes}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  {product.views}
-                </span>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Content */}
-          <div className="p-4">
-            {/* Seller */}
-            <div className="flex items-center gap-2 mb-2">
-              <img
-                src={product.seller.avatar}
-                alt={product.seller.name}
-                className="w-5 h-5 rounded-full"
-              />
-              <span className="text-xs text-muted-foreground truncate">
-                {product.seller.username}
-              </span>
+          <div className="p-3">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <img src={product.seller.avatar} alt="" className="w-4 h-4 rounded-full shrink-0" />
+              <span className="text-[11px] text-muted-foreground truncate">{product.seller.username}</span>
               {product.seller.verified && (
-                <Badge variant="verified" className="text-[10px] px-1.5 py-0">
-                  ✓
-                </Badge>
+                <Badge variant="verified" className="text-[9px] px-1 py-0 shrink-0">✓</Badge>
               )}
             </div>
-
-            {/* Title */}
-            <h3 className="font-medium text-sm leading-tight line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+            <h3 className="font-medium text-xs sm:text-sm leading-tight line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">
               {product.title}
             </h3>
-
-            {/* Price and size */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-2">
-                <span className="font-bold text-lg">₹{product.price.toLocaleString()}</span>
-                {product.originalPrice && (
-                  <span className="text-sm text-muted-foreground line-through">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-baseline gap-1 min-w-0">
+                <span className="font-bold text-sm sm:text-base">₹{product.price.toLocaleString()}</span>
+                {product.originalPrice && product.status !== "sold" && (
+                  <span className="text-[10px] sm:text-xs text-muted-foreground line-through truncate">
                     ₹{product.originalPrice.toLocaleString()}
                   </span>
                 )}
               </div>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+              <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full shrink-0">
                 {product.size}
               </span>
             </div>
-
-            {/* Brand */}
-            <p className="text-xs text-muted-foreground mt-2 truncate">
-              {product.brand}
-            </p>
           </div>
         </div>
       </Link>

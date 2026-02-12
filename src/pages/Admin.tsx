@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockProducts, mockSellers } from "@/data/mockData";
+import { useProducts, useSellers } from "@/hooks/useProducts";
 import { cn } from "@/lib/utils";
 
 const sidebarItems = [
@@ -43,6 +43,8 @@ const stats = [
 export default function Admin() {
   const [activeSection, setActiveSection] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { products } = useProducts();
+  const { sellers } = useSellers();
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -131,7 +133,7 @@ export default function Admin() {
             </Button>
             <div className="flex items-center gap-2">
               <img
-                src={mockSellers[0].avatar}
+                src={sellers[0]?.avatar ?? ""}
                 alt="Admin"
                 className="w-8 h-8 rounded-full"
               />
@@ -193,7 +195,7 @@ export default function Admin() {
                     </Button>
                   </div>
                   <div className="divide-y divide-border">
-                    {mockProducts.slice(0, 5).map((product) => (
+                    {products.slice(0, 5).map((product) => (
                       <div
                         key={product.id}
                         className="p-4 flex items-center gap-3 hover:bg-muted/50 transition-colors"
@@ -303,7 +305,7 @@ export default function Admin() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {mockSellers.map((seller) => (
+                    {sellers.map((seller) => (
                       <tr key={seller.id} className="hover:bg-muted/30">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
@@ -362,7 +364,7 @@ export default function Admin() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {mockProducts.map((product, i) => (
+                {products.map((product, i) => (
                   <motion.div
                     key={product.id}
                     initial={{ opacity: 0, y: 20 }}

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { Product } from "@/data/mockData";
+import { Product } from "@/types/product";
 
 export interface CartItem {
   product: Product;

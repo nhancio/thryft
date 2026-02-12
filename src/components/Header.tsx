@@ -2,22 +2,30 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, Heart, ShoppingBag, Menu, User, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/hooks/useAuth";
+import { LocationPrompt, getStoredLocation } from "@/components/LocationPrompt";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { totalItems, openCart } = useCart();
+  const { user, signInWithGoogle, signOut } = useAuth();
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  useEffect(() => {
+    if (user && !getStoredLocation()) setShowLocationPrompt(true);
+  }, [user]);
 
   const navLinks = [
     { href: "/browse", label: "Shop" },
-    { href: "/collections", label: "Collections" },
+    { href: "/categories", label: "Categories" },
   ];
 
   return (
     <>
+      <LocationPrompt open={showLocationPrompt} onClose={() => setShowLocationPrompt(false)} />
       <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="container flex h-16 items-center justify-between gap-4">
           {/* Logo */}
@@ -61,12 +69,7 @@ export function Header() {
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2">
-            {/* Mobile Search */}
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Search className="w-5 h-5" />
-            </Button>
-
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link to="/sell">
               <Button variant="hero" size="sm" className="hidden sm:flex gap-1">
                 <Plus className="w-4 h-4" />
@@ -74,11 +77,11 @@ export function Header() {
               </Button>
             </Link>
 
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="hidden sm:flex">
               <Heart className="w-5 h-5" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="relative" onClick={openCart}>
+            <Button variant="ghost" size="icon" className="relative hidden sm:flex" onClick={openCart}>
               <ShoppingBag className="w-5 h-5" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
@@ -87,11 +90,23 @@ export function Header() {
               )}
             </Button>
 
-            <Link to="/profile">
-              <Button variant="ghost" size="icon">
-                <User className="w-5 h-5" />
+            {user ? (
+              <Link to="/profile">
+                <Button variant="ghost" size="icon">
+                  <User className="w-5 h-5" />
+                </Button>
+              </Link>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => signInWithGoogle()} className="gap-1.5 text-xs sm:text-sm hidden sm:flex">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Login
               </Button>
-            </Link>
+            )}
 
             {/* Mobile Menu Toggle */}
             <Button
@@ -129,7 +144,7 @@ export function Header() {
               </div>
 
               {/* Mobile Nav Links */}
-              <nav className="flex flex-col gap-2">
+              <nav className="flex flex-col gap-1">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
@@ -145,6 +160,25 @@ export function Header() {
                     {link.label}
                   </Link>
                 ))}
+                <Link to="/sell" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2">
+                  <Plus className="w-4 h-4" /> Sell
+                </Link>
+                <button onClick={() => { openCart(); setMobileMenuOpen(false); }} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2 text-left">
+                  <ShoppingBag className="w-4 h-4" /> Cart {totalItems > 0 && `(${totalItems})`}
+                </button>
+                <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2">
+                  <Heart className="w-4 h-4" /> Saved
+                </Link>
+                <div className="border-t border-border/50 my-1" />
+                {user ? (
+                  <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted text-left">
+                    Sign out
+                  </button>
+                ) : (
+                  <button onClick={() => { signInWithGoogle(); setMobileMenuOpen(false); }} className="px-4 py-3 rounded-xl text-sm font-medium text-primary hover:bg-muted text-left">
+                    Login with Google
+                  </button>
+                )}
               </nav>
             </div>
           </motion.div>

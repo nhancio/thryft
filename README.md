@@ -50,6 +50,20 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
+## Supabase setup (optional)
+
+Product listings and auth use Supabase when configured.
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Copy `.env.example` to `.env` and set:
+   - `VITE_SUPABASE_URL` — Project URL (Settings → API)
+   - `VITE_SUPABASE_PUBLISHABLE_KEY` — anon public key
+3. Run migrations: in the Supabase SQL editor, run the SQL in `supabase/migrations/20250101000000_products_sellers.sql`.
+4. (Optional) Seed data: run `supabase/seed.sql` in the SQL editor to add sample sellers and products.
+5. For **Login with Google**: in Supabase Dashboard go to Authentication → Providers → Google, enable it, and add your OAuth client ID/secret. Add your site URL and redirect URL (e.g. `http://localhost:5173`) in Authentication → URL Configuration.
+
+Without `.env`, the app still runs using mock product data and no auth.
+
 ## What technologies are used for this project?
 
 This project is built with:

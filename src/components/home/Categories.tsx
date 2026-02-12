@@ -1,42 +1,25 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import catIphone from "@/assets/cat-iphone.jpg";
-import catMacbook from "@/assets/cat-macbook.jpg";
-import catIpad from "@/assets/cat-ipad.jpg";
-import catCars from "@/assets/cat-cars.jpg";
-import catAccessories from "@/assets/cat-accessories.jpg";
 
 const categories = [
   {
     name: "iPhone",
-    slug: "iphone",
-    image: catIphone,
+    slug: "iPhone",
+    image: "https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=800",
     itemCount: "500+",
   },
   {
     name: "MacBook",
-    slug: "macbook",
-    image: catMacbook,
+    slug: "MacBook",
+    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800",
     itemCount: "250+",
   },
   {
-    name: "iPad",
-    slug: "ipad",
-    image: catIpad,
+    name: "Watch",
+    slug: "Watch",
+    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=800",
     itemCount: "180+",
-  },
-  {
-    name: "Cars",
-    slug: "cars",
-    image: catCars,
-    itemCount: "120+",
-  },
-  {
-    name: "Accessories",
-    slug: "accessories",
-    image: catAccessories,
-    itemCount: "800+",
   },
 ];
 
@@ -54,7 +37,7 @@ export function Categories() {
             </p>
           </div>
           <Link
-            to="/browse"
+            to="/categories"
             className="hidden md:flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all"
           >
             View all categories
@@ -62,7 +45,7 @@ export function Categories() {
           </Link>
         </div>
 
-        <div className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 md:pb-0 px-4 md:px-0 -mx-4 md:mx-0 scrollbar-hide">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
           {categories.map((category, index) => (
             <motion.div
               key={category.slug}
@@ -70,14 +53,13 @@ export function Categories() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="min-w-[160px] md:min-w-0 flex-1 snap-center first:pl-4 last:pr-4 md:first:pl-0 md:last:pr-0"
             >
               <Link
                 to={`/browse?category=${category.slug}`}
-                className="group block h-full"
+                className="group block"
               >
-                <div className="relative rounded-2xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all duration-300 h-full">
-                  <div className="aspect-square">
+                <div className="relative rounded-2xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all duration-300">
+                  <div className="aspect-[4/3]">
                     <img
                       src={category.image}
                       alt={category.name}
@@ -85,11 +67,11 @@ export function Categories() {
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-                    <h3 className="text-background font-semibold text-base md:text-lg">
+                  <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+                    <h3 className="text-background font-semibold text-lg md:text-xl">
                       {category.name}
                     </h3>
-                    <p className="text-background/70 text-xs md:text-sm">
+                    <p className="text-background/70 text-sm">
                       {category.itemCount} items
                     </p>
                   </div>
@@ -100,7 +82,7 @@ export function Categories() {
         </div>
 
         <Link
-          to="/browse"
+          to="/categories"
           className="mt-6 flex md:hidden items-center justify-center gap-2 text-primary font-medium"
         >
           View all categories
