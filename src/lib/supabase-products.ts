@@ -1,24 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Product, Seller } from "@/types/product";
+import type { Product, UserProfile } from "@/types/product";
 import type { Tables } from "@/integrations/supabase/types";
 
-function mapSellerRow(row: Tables<"sellers">): Seller {
+function mapUserRow(row: Tables<"users">): UserProfile {
   return {
     id: row.id,
     name: row.name,
-    username: row.username,
+    email: row.email,
     avatar: row.avatar ?? "",
-    rating: row.rating,
-    totalSales: row.total_sales,
-    verified: row.verified,
-    responseTime: row.response_time ?? "",
     location: row.location ?? "",
   };
 }
 
 function mapProductRow(
   row: Tables<"products">,
-  seller: Seller
+  user: UserProfile
 ): Product {
   const images = Array.isArray(row.images) ? row.images : [];
   const measurements = row.measurements as Product["measurements"] | null;
@@ -35,7 +31,7 @@ function mapProductRow(
     condition: row.condition as Product["condition"],
     era: row.era ?? undefined,
     description: row.description,
-    seller,
+    seller: user,
     status: (row.status as Product["status"]) ?? "live",
     listedByUid: row.listed_by_uid ?? undefined,
     measurements: measurements ?? undefined,
@@ -59,26 +55,30 @@ export async function fetchProductsFromSupabase(): Promise<Product[]> {
     return [];
   }
 
-  const sellerIds = [...new Set(productRows.map((p) => p.seller_id))];
-  const { data: sellerRows, error: sellersError } = await supabase
-    .from("sellers")
+  const userIds = [...new Set(productRows.map((p) => p.seller_id))];
+  const { data: userRows, error: usersError } = await supabase
+    .from("users")
     .select("*")
-    .in("id", sellerIds);
+    .in("id", userIds);
 
-  if (sellersError || !sellerRows?.length) {
+  if (usersError || !userRows?.length) {
     return [];
   }
 
-  const sellerMap = new Map(sellerRows.map((s) => [s.id, mapSellerRow(s)]));
+  const userMap = new Map(userRows.map((u) => [u.id, mapUserRow(u)]));
 
-  return productRows.map((row) => {
-    const seller = sellerMap.get(row.seller_id);
-    if (!seller) return null;
-    return mapProductRow(row, seller);
-  }).filter(Boolean) as Product[];
+  return productRows
+    .map((row) => {
+      const user = userMap.get(row.seller_id);
+      if (!user) return null;
+      return mapProductRow(row, user);
+    })
+    .filter(Boolean) as Product[];
 }
 
-export async function fetchProductByIdFromSupabase(id: string): Promise<Product | null> {
+export async function fetchProductByIdFromSupabase(
+  id: string
+): Promise<Product | null> {
   const { data: row, error } = await supabase
     .from("products")
     .select("*")
@@ -87,30 +87,49 @@ export async function fetchProductByIdFromSupabase(id: string): Promise<Product 
 
   if (error || !row) return null;
 
-  const { data: sellerRow, error: sellerError } = await supabase
-    .from("sellers")
+  const { data: userRow, error: userError } = await supabase
+    .from("users")
     .select("*")
     .eq("id", row.seller_id)
     .single();
 
-  if (sellerError || !sellerRow) return null;
+  if (userError || !userRow) return null;
 
-  return mapProductRow(row, mapSellerRow(sellerRow));
+  return mapProductRow(row, mapUserRow(userRow));
 }
 
-export async function fetchSellersFromSupabase(): Promise<Seller[]> {
+export async function fetchUsersFromSupabase(): Promise<UserProfile[]> {
   const { data: rows, error } = await supabase
-    .from("sellers")
+    .from("users")
     .select("*")
     .order("created_at", { ascending: false });
 
   if (error || !rows?.length) return [];
-  return rows.map(mapSellerRow);
+  return rows.map(mapUserRow);
+}
+
+/** Upsert a user row from Google login metadata. */
+export async function upsertUser(user: {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  location?: string;
+}): Promise<void> {
+  await supabase.from("users").upsert(
+    {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar ?? null,
+      location: user.location ?? null,
+    },
+    { onConflict: "id" }
+  );
 }
 
 /** Insert a product listing; listed_by_uid is set from current auth user. */
 export async function insertProductListing(insert: {
-  seller_id: string;
   title: string;
   price: number;
   original_price?: number | null;
@@ -128,13 +147,16 @@ export async function insertProductListing(insert: {
   local_pickup?: boolean;
   status?: string;
 }): Promise<{ id: string } | { error: string }> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: "Not signed in" };
 
   const { data, error } = await supabase
     .from("products")
     .insert({
       ...insert,
+      seller_id: user.id,
       listed_by_uid: user.id,
     })
     .select("id")

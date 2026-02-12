@@ -123,11 +123,14 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           {/* Content */}
           <div className="p-3">
             <div className="flex items-center gap-1.5 mb-1.5">
-              <img src={product.seller.avatar} alt="" className="w-4 h-4 rounded-full shrink-0" />
-              <span className="text-[11px] text-muted-foreground truncate">{product.seller.username}</span>
-              {product.seller.verified && (
-                <Badge variant="verified" className="text-[9px] px-1 py-0 shrink-0">✓</Badge>
+              {product.seller.avatar ? (
+                <img src={product.seller.avatar} alt="" className="w-4 h-4 rounded-full shrink-0" />
+              ) : (
+                <div className="w-4 h-4 rounded-full bg-muted text-[8px] font-bold flex items-center justify-center shrink-0">
+                  {product.seller.name.charAt(0)}
+                </div>
               )}
+              <span className="text-[11px] text-muted-foreground truncate">{product.seller.name}</span>
             </div>
             <h3 className="font-medium text-xs sm:text-sm leading-tight line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">
               {product.title}

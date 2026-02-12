@@ -1,6 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchProductsFromSupabase, fetchProductByIdFromSupabase, fetchSellersFromSupabase } from "@/lib/supabase-products";
-import type { Product, Seller } from "@/types/product";
+import {
+  fetchProductsFromSupabase,
+  fetchProductByIdFromSupabase,
+  fetchUsersFromSupabase,
+} from "@/lib/supabase-products";
+import type { Product, UserProfile } from "@/types/product";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -40,7 +44,8 @@ export function useProduct(id: string | undefined): {
 } {
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
-    queryFn: () => (id ? fetchProductByIdFromSupabase(id) : Promise.resolve(null)),
+    queryFn: () =>
+      id ? fetchProductByIdFromSupabase(id) : Promise.resolve(null),
     enabled: !!SUPABASE_URL && !!id,
     staleTime: 60 * 1000,
   });
@@ -51,16 +56,15 @@ export function useProduct(id: string | undefined): {
   };
 }
 
-export function useSellers(): { sellers: Seller[]; isLoading: boolean } {
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-  const { data: sellers = [], isLoading } = useQuery({
-    queryKey: ["sellers"],
-    queryFn: fetchSellersFromSupabase,
+export function useUsers(): { users: UserProfile[]; isLoading: boolean } {
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsersFromSupabase,
     staleTime: 60 * 1000,
     enabled: !!SUPABASE_URL,
   });
   return {
-    sellers,
+    users,
     isLoading: !!SUPABASE_URL && isLoading,
   };
 }

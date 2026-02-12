@@ -12,40 +12,28 @@ export type Database = {
   }
   public: {
     Tables: {
-      sellers: {
+      users: {
         Row: {
           id: string
           name: string
-          username: string
+          email: string
           avatar: string | null
-          rating: number
-          total_sales: number
-          verified: boolean
-          response_time: string | null
           location: string | null
           created_at: string
         }
         Insert: {
-          id?: string
+          id: string
           name: string
-          username: string
+          email: string
           avatar?: string | null
-          rating?: number
-          total_sales?: number
-          verified?: boolean
-          response_time?: string | null
           location?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           name?: string
-          username?: string
+          email?: string
           avatar?: string | null
-          rating?: number
-          total_sales?: number
-          verified?: boolean
-          response_time?: string | null
           location?: string | null
           created_at?: string
         }

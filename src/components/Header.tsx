@@ -1,17 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Heart, ShoppingBag, Menu, User, Plus, X } from "lucide-react";
+import { Search, Heart, Menu, User, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/hooks/useAuth";
 import { LocationPrompt, getStoredLocation } from "@/components/LocationPrompt";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { totalItems, openCart } = useCart();
   const { user, signInWithGoogle, signOut } = useAuth();
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   useEffect(() => {
@@ -81,15 +79,6 @@ export function Header() {
               <Heart className="w-5 h-5" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="relative hidden sm:flex" onClick={openCart}>
-              <ShoppingBag className="w-5 h-5" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                  {totalItems > 9 ? "9+" : totalItems}
-                </span>
-              )}
-            </Button>
-
             {user ? (
               <Link to="/profile">
                 <Button variant="ghost" size="icon">
@@ -115,11 +104,7 @@ export function Header() {
               className="md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
@@ -163,9 +148,6 @@ export function Header() {
                 <Link to="/sell" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2">
                   <Plus className="w-4 h-4" /> Sell
                 </Link>
-                <button onClick={() => { openCart(); setMobileMenuOpen(false); }} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2 text-left">
-                  <ShoppingBag className="w-4 h-4" /> Cart {totalItems > 0 && `(${totalItems})`}
-                </button>
                 <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2">
                   <Heart className="w-4 h-4" /> Saved
                 </Link>

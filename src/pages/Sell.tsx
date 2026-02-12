@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Camera,
@@ -9,12 +10,16 @@ import {
   Sparkles,
   Check,
   AlertCircle,
+  Eye,
+  ImagePlus,
+  LogIn,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const steps = [
   { id: 1, title: "Category", description: "Choose product type" },
@@ -33,13 +38,14 @@ const watchSizes = ["38mm", "40mm", "41mm", "44mm", "45mm", "49mm"];
 const eras = ["2020s", "2010s", "2000s", "90s", "80s", "70s", "Vintage"];
 
 export default function Sell() {
+  const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     category: "",
-    brand: "",
     size: "",
     condition: "",
     era: "",
@@ -94,17 +100,131 @@ export default function Sell() {
       case 2:
         return photos.length >= 3;
       case 3:
-        return (
-          formData.title &&
-          formData.size &&
-          formData.condition
-        );
+        return formData.title && formData.size && formData.condition;
       case 4:
         return formData.price && Number(formData.price) > 0;
       default:
         return true;
     }
   };
+
+  const resetForm = () => {
+    setSubmitted(false);
+    setShowPreview(false);
+    setCurrentStep(1);
+    setPhotos([]);
+    setFormData({
+      title: "",
+      category: "",
+      size: "",
+      condition: "",
+      era: "",
+      description: "",
+      price: "",
+      allowOffers: true,
+      shippingIncluded: false,
+      localPickup: false,
+      storage: "",
+      model: "",
+      batteryHealth: "",
+      ram: "",
+      chip: "",
+      cellular: "",
+    });
+  };
+
+  /* ── Listing Preview Card (reused in step 5 and confirmation) ── */
+  const ListingPreview = ({ compact = false }: { compact?: boolean }) => (
+    <div className={cn("rounded-2xl border border-border overflow-hidden bg-card", compact && "max-w-sm mx-auto")}>
+      {/* Photo gallery */}
+      {photos.length > 0 && (
+        <div className="relative">
+          <div className={cn("relative overflow-hidden", compact ? "aspect-square" : "aspect-[4/3]")}>
+            <img src={photos[0]} alt="" className="w-full h-full object-cover" />
+            {photos.length > 1 && (
+              <span className="absolute bottom-2 right-2 bg-foreground/70 text-background px-2 py-0.5 rounded-full text-xs">
+                +{photos.length - 1} more
+              </span>
+            )}
+          </div>
+          {!compact && photos.length > 1 && (
+            <div className="flex gap-1 p-2">
+              {photos.slice(1, 4).map((p, i) => (
+                <div key={i} className="w-16 h-16 rounded-lg overflow-hidden">
+                  <img src={p} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+              {photos.length > 4 && (
+                <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                  +{photos.length - 4}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      <div className="p-4">
+        <h3 className={cn("font-semibold", compact ? "text-sm" : "text-lg")}>
+          {formData.title || "Your item title"}
+        </h3>
+        <p className={cn("font-bold mt-1", compact ? "text-lg" : "text-2xl")}>
+          ₹{Number(formData.price || 0).toLocaleString()}
+        </p>
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {formData.category && <Badge variant="secondary" className="text-xs">{formData.category}</Badge>}
+          {formData.size && <Badge variant="secondary" className="text-xs">{formData.size}</Badge>}
+          {formData.condition && <Badge variant="secondary" className="text-xs">{formData.condition}</Badge>}
+          {formData.era && <Badge variant="secondary" className="text-xs">{formData.era}</Badge>}
+          {formData.model && <Badge variant="secondary" className="text-xs">{formData.model}</Badge>}
+          {formData.chip && <Badge variant="secondary" className="text-xs">{formData.chip}</Badge>}
+          {formData.ram && <Badge variant="secondary" className="text-xs">{formData.ram} RAM</Badge>}
+          {formData.batteryHealth && <Badge variant="secondary" className="text-xs">Battery {formData.batteryHealth}%</Badge>}
+          {formData.cellular && <Badge variant="secondary" className="text-xs">Cellular: {formData.cellular}</Badge>}
+        </div>
+        {!compact && formData.description && (
+          <p className="text-sm text-muted-foreground mt-3 line-clamp-3">{formData.description}</p>
+        )}
+        {!compact && (
+          <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
+            {formData.allowOffers && <span>Offers accepted</span>}
+            {formData.shippingIncluded && <span>Free shipping</span>}
+            {formData.localPickup && <span>Local pickup</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  /* ── Login gate ── */
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-16 max-w-md text-center">
+          <div className="rounded-3xl border border-border bg-card p-10">
+            <LogIn className="w-12 h-12 mx-auto mb-4 text-primary" />
+            <h2 className="text-2xl font-display font-bold mb-2">Sign in to list</h2>
+            <p className="text-muted-foreground mb-6">
+              You need to be logged in to list an item on Thryft. It takes just a few seconds.
+            </p>
+            <Button variant="hero" size="lg" onClick={() => signInWithGoogle()} className="w-full gap-2">
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Login with Google
+            </Button>
+            <Link to="/browse" className="block mt-4 text-sm text-muted-foreground hover:text-foreground">
+              or continue browsing
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,10 +244,7 @@ export default function Sell() {
             </div>
 
             {steps.map((step) => (
-              <div
-                key={step.id}
-                className="relative z-10 flex flex-col items-center"
-              >
+              <div key={step.id} className="relative z-10 flex flex-col items-center">
                 <motion.div
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
@@ -135,25 +252,12 @@ export default function Sell() {
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground"
                   )}
-                  animate={{
-                    scale: currentStep === step.id ? 1.1 : 1,
-                  }}
+                  animate={{ scale: currentStep === step.id ? 1.1 : 1 }}
                 >
-                  {currentStep > step.id ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    step.id
-                  )}
+                  {currentStep > step.id ? <Check className="w-5 h-5" /> : step.id}
                 </motion.div>
                 <div className="mt-2 text-center hidden sm:block">
-                  <div
-                    className={cn(
-                      "text-sm font-medium",
-                      currentStep >= step.id
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    )}
-                  >
+                  <div className={cn("text-sm font-medium", currentStep >= step.id ? "text-foreground" : "text-muted-foreground")}>
                     {step.title}
                   </div>
                 </div>
@@ -162,27 +266,42 @@ export default function Sell() {
           </div>
         </div>
 
-        {/* Success state after publish */}
+        {/* ── Success state after publish ── */}
         {submitted ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12 px-6 rounded-3xl border border-primary/20 bg-primary/5"
+            className="space-y-8"
           >
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
-              <Check className="w-8 h-8 text-primary" />
+            <div className="text-center py-10 px-6 rounded-3xl border border-primary/20 bg-primary/5">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
+                <Check className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className="text-2xl font-display font-bold mb-2">Listing submitted</h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Your product is sent for verification. Sit back and chill now — we'll notify you once it's live.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+                <Button variant="hero" onClick={() => setShowPreview(!showPreview)}>
+                  <Eye className="w-4 h-4 mr-2" />
+                  {showPreview ? "Hide preview" : "Show your listing"}
+                </Button>
+                <Button variant="outline" onClick={resetForm}>
+                  List another item
+                </Button>
+                <Link to="/profile">
+                  <Button variant="ghost">Go to profile</Button>
+                </Link>
+              </div>
             </div>
-            <h2 className="text-2xl font-display font-bold mb-2">Listing submitted</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Your product is sent for verification. Sit back and chill now — we’ll notify you once it’s live.
-            </p>
-            <Button
-              variant="outline"
-              className="mt-8"
-              onClick={() => { setSubmitted(false); setCurrentStep(1); setPhotos([]); setFormData({ title: "", category: "", brand: "", size: "", condition: "", era: "", description: "", price: "", allowOffers: true, shippingIncluded: false, localPickup: false, storage: "", model: "", batteryHealth: "", ram: "", chip: "", cellular: "" }); }}
-            >
-              List another item
-            </Button>
+
+            {/* Listing preview after submission */}
+            {showPreview && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 text-center">Here's how your listing will look</h3>
+                <ListingPreview />
+              </motion.div>
+            )}
           </motion.div>
         ) : (
         <>
@@ -198,14 +317,9 @@ export default function Sell() {
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-display font-bold mb-2">
-                    What are you selling?
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Choose the category that best fits your item.
-                  </p>
+                  <h2 className="text-2xl font-display font-bold mb-2">What are you selling?</h2>
+                  <p className="text-muted-foreground">Choose the category that best fits your item.</p>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   {categories.map((cat) => (
                     <button
@@ -232,11 +346,9 @@ export default function Sell() {
             {currentStep === 2 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-display font-bold mb-2">
-                    Add your photos
-                  </h2>
+                  <h2 className="text-2xl font-display font-bold mb-2">Add your photos</h2>
                   <p className="text-muted-foreground">
-                    Add at least 3 photos. The first photo will be your cover.
+                    Add at least 3 photos. Select multiple at once. The first photo will be your cover.
                   </p>
                 </div>
 
@@ -248,24 +360,31 @@ export default function Sell() {
                   className="hidden"
                   onChange={handlePhotoUpload}
                 />
+
+                {/* Bulk upload button */}
+                {photos.length < 6 && (
+                  <Button
+                    variant="outline"
+                    className="w-full h-14 gap-2 border-dashed border-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImagePlus className="w-5 h-5" />
+                    Select photos ({photos.length}/6)
+                  </Button>
+                )}
+
                 <div className="grid grid-cols-3 gap-3">
                   {[...Array(6)].map((_, i) => (
                     <div
                       key={i}
                       className={cn(
                         "aspect-square rounded-xl border-2 border-dashed transition-colors overflow-hidden",
-                        photos[i]
-                          ? "border-transparent"
-                          : "border-border hover:border-primary/50"
+                        photos[i] ? "border-transparent" : "border-border hover:border-primary/50"
                       )}
                     >
                       {photos[i] ? (
                         <div className="relative w-full h-full group">
-                          <img
-                            src={photos[i]}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={photos[i]} alt="" className="w-full h-full object-cover" />
                           <button
                             type="button"
                             onClick={() => removePhoto(i)}
@@ -273,11 +392,7 @@ export default function Sell() {
                           >
                             <X className="w-4 h-4" />
                           </button>
-                          {i === 0 && (
-                            <Badge className="absolute bottom-2 left-2">
-                              Cover
-                            </Badge>
-                          )}
+                          {i === 0 && <Badge className="absolute bottom-2 left-2">Cover</Badge>}
                         </div>
                       ) : (
                         <button
@@ -285,14 +400,8 @@ export default function Sell() {
                           onClick={() => fileInputRef.current?.click()}
                           className="w-full h-full flex flex-col items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          {i === 0 ? (
-                            <Camera className="w-8 h-8 mb-2" />
-                          ) : (
-                            <Upload className="w-6 h-6 mb-1" />
-                          )}
-                          <span className="text-xs">
-                            {i === 0 ? "Add cover" : "Add photo"}
-                          </span>
+                          {i === 0 ? <Camera className="w-8 h-8 mb-2" /> : <Upload className="w-6 h-6 mb-1" />}
+                          <span className="text-xs">{i === 0 ? "Add cover" : "Add photo"}</span>
                         </button>
                       )}
                     </div>
@@ -306,9 +415,9 @@ export default function Sell() {
                     <div>
                       <h4 className="font-medium mb-1">Photo tips</h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>• Use natural lighting for best results</li>
-                        <li>• Show front, back, and any details/flaws</li>
-                        <li>• Include a photo of the label/tag</li>
+                        <li>Use natural lighting for best results</li>
+                        <li>Show front, back, and any details/flaws</li>
+                        <li>Include a photo of the label/tag</li>
                       </ul>
                     </div>
                   </div>
@@ -320,45 +429,21 @@ export default function Sell() {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-display font-bold mb-2">
-                    Describe your item
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Add details to help buyers find your item.
-                  </p>
+                  <h2 className="text-2xl font-display font-bold mb-2">Describe your item</h2>
+                  <p className="text-muted-foreground">Add details to help buyers find your item.</p>
                 </div>
 
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Title *
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Title *</label>
                   <input
                     type="text"
                     value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    placeholder="Brand + Item + Key detail (e.g., MacBook Pro M1 2020)"
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Item + Key detail (e.g., MacBook Pro M1 2020 256GB)"
                     className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formData.title.length}/80 characters
-                  </p>
-                </div>
-
-                {/* Brand */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Brand</label>
-                  <input
-                    type="text"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                    placeholder="e.g., Apple, Dell, Unknown"
-                    className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                  />
+                  <p className="text-xs text-muted-foreground mt-1">{formData.title.length}/80 characters</p>
                 </div>
 
                 {/* Size - dynamic by category */}
@@ -444,38 +529,22 @@ export default function Sell() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Cellular?</label>
                     <div className="flex gap-2">
-                      <Button
-                        variant={formData.cellular === "Yes" ? "default" : "tag"}
-                        size="sm"
-                        onClick={() => setFormData({ ...formData, cellular: "Yes" })}
-                      >
-                        Yes
-                      </Button>
-                      <Button
-                        variant={formData.cellular === "No" ? "default" : "tag"}
-                        size="sm"
-                        onClick={() => setFormData({ ...formData, cellular: "No" })}
-                      >
-                        No
-                      </Button>
+                      <Button variant={formData.cellular === "Yes" ? "default" : "tag"} size="sm" onClick={() => setFormData({ ...formData, cellular: "Yes" })}>Yes</Button>
+                      <Button variant={formData.cellular === "No" ? "default" : "tag"} size="sm" onClick={() => setFormData({ ...formData, cellular: "No" })}>No</Button>
                     </div>
                   </div>
                 )}
 
                 {/* Condition */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Condition *
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Condition *</label>
                   <div className="flex flex-wrap gap-2">
                     {conditions.map((cond) => (
                       <Button
                         key={cond}
                         variant={formData.condition === cond ? "default" : "tag"}
                         size="sm"
-                        onClick={() =>
-                          setFormData({ ...formData, condition: cond })
-                        }
+                        onClick={() => setFormData({ ...formData, condition: cond })}
                       >
                         {cond}
                       </Button>
@@ -485,21 +554,14 @@ export default function Sell() {
 
                 {/* Era */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Era (optional)
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Era (optional)</label>
                   <div className="flex flex-wrap gap-2">
                     {eras.map((era) => (
                       <Button
                         key={era}
                         variant={formData.era === era ? "default" : "tag"}
                         size="sm"
-                        onClick={() =>
-                          setFormData({
-                            ...formData,
-                            era: formData.era === era ? "" : era,
-                          })
-                        }
+                        onClick={() => setFormData({ ...formData, era: formData.era === era ? "" : era })}
                       >
                         {era}
                       </Button>
@@ -509,21 +571,15 @@ export default function Sell() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Description
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Description</label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Tell buyers what makes this piece special. Include any flaws or unique details."
                     rows={4}
                     className="w-full px-4 py-3 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formData.description.length}/800 characters
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{formData.description.length}/800 characters</p>
                 </div>
               </div>
             )}
@@ -532,29 +588,19 @@ export default function Sell() {
             {currentStep === 4 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-display font-bold mb-2">
-                    Set your price
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Price it right to sell faster.
-                  </p>
+                  <h2 className="text-2xl font-display font-bold mb-2">Set your price</h2>
+                  <p className="text-muted-foreground">Price it right to sell faster.</p>
                 </div>
 
                 {/* Price Input */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Price *
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Price *</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      ₹
-                    </span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
                     <input
                       type="number"
                       value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       placeholder="0"
                       className="w-full h-14 pl-8 pr-4 text-2xl font-bold rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     />
@@ -566,9 +612,7 @@ export default function Sell() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Suggested price</p>
-                      <p className="text-sm text-muted-foreground">
-                        Based on similar items
-                      </p>
+                      <p className="text-sm text-muted-foreground">Based on similar items</p>
                     </div>
                     <p className="text-xl font-bold">₹1,299 - ₹1,899</p>
                   </div>
@@ -579,61 +623,23 @@ export default function Sell() {
                   <label className="flex items-center justify-between p-4 rounded-xl bg-muted/30 cursor-pointer">
                     <div>
                       <p className="font-medium">Allow offers</p>
-                      <p className="text-sm text-muted-foreground">
-                        Let buyers negotiate
-                      </p>
+                      <p className="text-sm text-muted-foreground">Let buyers negotiate</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={formData.allowOffers}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          allowOffers: e.target.checked,
-                        })
-                      }
-                      className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
-                    />
+                    <input type="checkbox" checked={formData.allowOffers} onChange={(e) => setFormData({ ...formData, allowOffers: e.target.checked })} className="w-5 h-5 rounded border-border text-primary focus:ring-primary" />
                   </label>
-
                   <label className="flex items-center justify-between p-4 rounded-xl bg-muted/30 cursor-pointer">
                     <div>
                       <p className="font-medium">Free shipping</p>
-                      <p className="text-sm text-muted-foreground">
-                        Include shipping in price
-                      </p>
+                      <p className="text-sm text-muted-foreground">Include shipping in price</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={formData.shippingIncluded}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          shippingIncluded: e.target.checked,
-                        })
-                      }
-                      className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
-                    />
+                    <input type="checkbox" checked={formData.shippingIncluded} onChange={(e) => setFormData({ ...formData, shippingIncluded: e.target.checked })} className="w-5 h-5 rounded border-border text-primary focus:ring-primary" />
                   </label>
-
                   <label className="flex items-center justify-between p-4 rounded-xl bg-muted/30 cursor-pointer">
                     <div>
                       <p className="font-medium">Local pickup</p>
-                      <p className="text-sm text-muted-foreground">
-                        Allow buyers to pick up
-                      </p>
+                      <p className="text-sm text-muted-foreground">Allow buyers to pick up</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={formData.localPickup}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          localPickup: e.target.checked,
-                        })
-                      }
-                      className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
-                    />
+                    <input type="checkbox" checked={formData.localPickup} onChange={(e) => setFormData({ ...formData, localPickup: e.target.checked })} className="w-5 h-5 rounded border-border text-primary focus:ring-primary" />
                   </label>
                 </div>
 
@@ -642,22 +648,16 @@ export default function Sell() {
                   <h4 className="font-medium mb-3">Your earnings</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Listing price
-                      </span>
+                      <span className="text-muted-foreground">Listing price</span>
                       <span>₹{formData.price || 0}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Platform fee (7%)
-                      </span>
+                      <span className="text-muted-foreground">Platform fee (7%)</span>
                       <span>-₹{Math.round(Number(formData.price) * 0.07)}</span>
                     </div>
                     <div className="border-t border-border pt-2 flex justify-between font-semibold">
                       <span>You'll earn</span>
-                      <span className="text-primary">
-                        ₹{Math.round(Number(formData.price) * 0.93)}
-                      </span>
+                      <span className="text-primary">₹{Math.round(Number(formData.price) * 0.93)}</span>
                     </div>
                   </div>
                 </div>
@@ -668,90 +668,36 @@ export default function Sell() {
             {currentStep === 5 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-display font-bold mb-2">
-                    Review your listing
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Almost there! Review and publish your item.
-                  </p>
+                  <h2 className="text-2xl font-display font-bold mb-2">Review your listing</h2>
+                  <p className="text-muted-foreground">Almost there! Here's how buyers will see your listing.</p>
                 </div>
 
-                {/* Preview Card */}
-                <div className="rounded-2xl border border-border overflow-hidden">
-                  {photos[0] && (
-                    <div className="aspect-video relative">
-                      <img
-                        src={photos[0]}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg">
-                      {formData.title || "Your item title"}
-                    </h3>
-                    <p className="text-2xl font-bold mt-2">
-                      ₹{formData.price || 0}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {formData.category && (
-                        <Badge variant="secondary">{formData.category}</Badge>
-                      )}
-                      {formData.size && (
-                        <Badge variant="secondary">{formData.size}</Badge>
-                      )}
-                      {formData.condition && (
-                        <Badge variant="secondary">{formData.condition}</Badge>
-                      )}
-                      {formData.era && (
-                        <Badge variant="secondary">{formData.era}</Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                {/* Full preview */}
+                <ListingPreview />
 
                 {/* Checklist */}
                 <div className="space-y-2">
                   {[
-                    { done: photos.length >= 3, text: "At least 3 photos" },
+                    { done: photos.length >= 3, text: `${photos.length} photos added (min 3)` },
                     { done: !!formData.title, text: "Title added" },
                     { done: !!formData.category, text: "Category selected" },
-                    { done: !!formData.price, text: "Price set" },
+                    { done: !!formData.size, text: `${formData.category === "Watch" ? "Case size" : "Storage"} selected` },
+                    { done: !!formData.condition, text: "Condition set" },
+                    { done: !!formData.price, text: `Price set — ₹${Number(formData.price || 0).toLocaleString()}` },
                   ].map((item, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 text-sm"
-                    >
-                      {item.done ? (
-                        <Check className="w-4 h-4 text-primary" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-destructive" />
-                      )}
-                      <span
-                        className={
-                          item.done ? "text-foreground" : "text-muted-foreground"
-                        }
-                      >
-                        {item.text}
-                      </span>
+                    <div key={i} className="flex items-center gap-3 text-sm">
+                      {item.done ? <Check className="w-4 h-4 text-primary shrink-0" /> : <AlertCircle className="w-4 h-4 text-destructive shrink-0" />}
+                      <span className={item.done ? "text-foreground" : "text-muted-foreground"}>{item.text}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Terms */}
                 <label className="flex items-start gap-3 p-4 rounded-xl bg-muted/30">
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 rounded border-border text-primary focus:ring-primary mt-0.5"
-                  />
+                  <input type="checkbox" className="w-5 h-5 rounded border-border text-primary focus:ring-primary mt-0.5" />
                   <span className="text-sm text-muted-foreground">
-                    I confirm this item is authentic and accurately described.
-                    I agree to the{" "}
-                    <a href="#" className="text-primary underline">
-                      Seller Terms
-                    </a>
-                    .
+                    I confirm this item is authentic and accurately described. I agree to the{" "}
+                    <a href="#" className="text-primary underline">Seller Terms</a>.
                   </span>
                 </label>
               </div>
@@ -759,32 +705,20 @@ export default function Sell() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation - hidden when submitted */}
+        {/* Navigation */}
         <div className="flex justify-between mt-8 pt-6 border-t border-border">
-          <Button
-            variant="ghost"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-          >
+          <Button variant="ghost" onClick={prevStep} disabled={currentStep === 1}>
             <ChevronLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
 
           {currentStep < 5 ? (
-            <Button
-              variant="hero"
-              onClick={currentStep === 4 ? nextStep : nextStep}
-              disabled={!canProceed()}
-            >
+            <Button variant="hero" onClick={nextStep} disabled={!canProceed()}>
               {currentStep === 4 ? "Review" : "Continue"}
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (
-            <Button
-              variant="hero"
-              disabled={!canProceed()}
-              onClick={() => setSubmitted(true)}
-            >
+            <Button variant="hero" disabled={!canProceed()} onClick={() => setSubmitted(true)}>
               Publish Listing
               <Sparkles className="w-4 h-4 ml-2" />
             </Button>

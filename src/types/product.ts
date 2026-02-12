@@ -2,6 +2,14 @@
 
 export type ProductStatus = "hold" | "sold" | "live";
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  location: string;
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -15,7 +23,7 @@ export interface Product {
   condition: "new" | "like-new" | "gently-used" | "worn";
   era?: string;
   description: string;
-  seller: Seller;
+  seller: UserProfile;
   status: ProductStatus;
   listedByUid?: string | null;
   measurements?: {
@@ -32,18 +40,6 @@ export interface Product {
   createdAt: string;
   likes: number;
   views: number;
-}
-
-export interface Seller {
-  id: string;
-  name: string;
-  username: string;
-  avatar: string;
-  rating: number;
-  totalSales: number;
-  verified: boolean;
-  responseTime: string;
-  location: string;
 }
 
 export interface Collection {

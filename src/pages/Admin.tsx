@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useProducts, useSellers } from "@/hooks/useProducts";
+import { useProducts, useUsers } from "@/hooks/useProducts";
 import { cn } from "@/lib/utils";
 
 const sidebarItems = [
@@ -44,7 +44,7 @@ export default function Admin() {
   const [activeSection, setActiveSection] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { products } = useProducts();
-  const { sellers } = useSellers();
+  const { users } = useUsers();
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -133,7 +133,7 @@ export default function Admin() {
             </Button>
             <div className="flex items-center gap-2">
               <img
-                src={sellers[0]?.avatar ?? ""}
+                src={users[0]?.avatar ?? ""}
                 alt="Admin"
                 className="w-8 h-8 rounded-full"
               />
@@ -210,7 +210,7 @@ export default function Admin() {
                             {product.title}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            by {product.seller.username}
+                            by {product.seller.name}
                           </p>
                         </div>
                         <Badge variant="secondary">
@@ -297,47 +297,32 @@ export default function Admin() {
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="text-left p-4 font-medium text-sm">User</th>
-                      <th className="text-left p-4 font-medium text-sm">Status</th>
-                      <th className="text-left p-4 font-medium text-sm">Listings</th>
-                      <th className="text-left p-4 font-medium text-sm">Sales</th>
-                      <th className="text-left p-4 font-medium text-sm">Rating</th>
+                      <th className="text-left p-4 font-medium text-sm">Email</th>
+                      <th className="text-left p-4 font-medium text-sm">Location</th>
                       <th className="text-left p-4 font-medium text-sm">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {sellers.map((seller) => (
-                      <tr key={seller.id} className="hover:bg-muted/30">
+                    {users.map((u) => (
+                      <tr key={u.id} className="hover:bg-muted/30">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <img
-                              src={seller.avatar}
-                              alt=""
-                              className="w-10 h-10 rounded-full"
-                            />
-                            <div>
-                              <p className="font-medium">{seller.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {seller.username}
-                              </p>
-                            </div>
+                            {u.avatar ? (
+                              <img src={u.avatar} alt="" className="w-10 h-10 rounded-full" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center font-bold text-muted-foreground">
+                                {u.name.charAt(0)}
+                              </div>
+                            )}
+                            <p className="font-medium">{u.name}</p>
                           </div>
                         </td>
-                        <td className="p-4">
-                          <Badge variant={seller.verified ? "verified" : "secondary"}>
-                            {seller.verified ? "Verified" : "Unverified"}
-                          </Badge>
-                        </td>
-                        <td className="p-4">24</td>
-                        <td className="p-4">{seller.totalSales}</td>
-                        <td className="p-4">{seller.rating}</td>
+                        <td className="p-4 text-sm text-muted-foreground">{u.email}</td>
+                        <td className="p-4 text-sm text-muted-foreground">{u.location || "—"}</td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm">
-                              View
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              Suspend
-                            </Button>
+                            <Button variant="ghost" size="sm">View</Button>
+                            <Button variant="ghost" size="sm">Suspend</Button>
                           </div>
                         </td>
                       </tr>
@@ -385,7 +370,7 @@ export default function Admin() {
                         {product.title}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {product.seller.username}
+                        {product.seller.name}
                       </p>
                       <div className="flex items-center justify-between mt-3">
                         <span className="font-semibold">

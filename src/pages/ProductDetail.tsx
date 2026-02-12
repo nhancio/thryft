@@ -5,10 +5,8 @@ import {
   Heart,
   Share2,
   MessageCircle,
-  ShieldCheck,
   Truck,
   MapPin,
-  Star,
   ChevronLeft,
   ChevronRight,
   Package,
@@ -162,28 +160,25 @@ export default function ProductDetail() {
 
           {/* ── RIGHT: Info + Actions ── */}
           <div className="space-y-6">
-            {/* Seller */}
-            <Link
-              to={`/seller/${product.seller.id}`}
-              className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-            >
-              <img src={product.seller.avatar} alt={product.seller.name} className="w-10 h-10 rounded-full shrink-0" />
+            {/* Listed by */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+              {product.seller.avatar ? (
+                <img src={product.seller.avatar} alt={product.seller.name} className="w-10 h-10 rounded-full shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0">
+                  {product.seller.name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-sm truncate">{product.seller.name}</span>
-                  {product.seller.verified && (
-                    <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-0.5">
-                    <Star className="w-3 h-3 fill-primary text-primary" />
-                    {product.seller.rating}
+                <span className="font-semibold text-sm truncate block">{product.seller.name}</span>
+                {product.seller.location && (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {product.seller.location}
                   </span>
-                  <span>{product.seller.totalSales} sales</span>
-                </div>
+                )}
               </div>
-            </Link>
+            </div>
 
             {/* Title & Price */}
             <div>
