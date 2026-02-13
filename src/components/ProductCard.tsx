@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSavedProducts } from "@/hooks/useProducts";
 import { toast } from "sonner";
+import { openRazorpayCheckout } from "@/lib/razorpay";
 import {
   Dialog,
   DialogContent,
@@ -194,7 +195,20 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      requireAuth(() => toast.info("Payment flow coming soon"));
+                      requireAuth(async () => {
+                        try {
+                          const result = await openRazorpayCheckout({
+                            amount: product.price,
+                            productName: product.title,
+                            email: user?.email ?? "",
+                            name: user?.user_metadata?.full_name ?? "",
+                          });
+                          toast.success(`Payment successful! ID: ${result.razorpay_payment_id}`);
+                        } catch (err: unknown) {
+                          const msg = err instanceof Error ? err.message : "Payment failed";
+                          if (msg !== "Payment cancelled") toast.error(msg);
+                        }
+                      });
                     }}
                   >
                     Buy now

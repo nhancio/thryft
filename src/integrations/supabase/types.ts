@@ -19,6 +19,7 @@ export type Database = {
           email: string
           avatar: string | null
           location: string | null
+          phone: string | null
           wallet_points: number
           created_at: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           email: string
           avatar?: string | null
           location?: string | null
+          phone?: string | null
           wallet_points?: number
           created_at?: string
         }
@@ -37,6 +39,7 @@ export type Database = {
           email?: string
           avatar?: string | null
           location?: string | null
+          phone?: string | null
           wallet_points?: number
           created_at?: string
         }

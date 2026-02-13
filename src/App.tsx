@@ -27,7 +27,7 @@ posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [pathname]);
   return null;
 }

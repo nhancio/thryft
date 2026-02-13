@@ -47,7 +47,14 @@ export function Footer() {
                 className="hover:text-primary transition-colors flex items-center gap-1.5"
               >
                 <Phone className="w-3.5 h-3.5" />
-                Contact Us
+                70952 88950
+              </a>
+              <a
+                href="tel:6304408747"
+                className="hover:text-primary transition-colors flex items-center gap-1.5"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                63044 08747
               </a>
               <Link to="/about" className="hover:text-primary transition-colors">About</Link>
               <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
@@ -56,14 +63,10 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-background/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-background/20 mt-12 pt-8 text-center">
           <p className="text-sm text-background/50">
             © 2026 Thryft. All rights reserved.
           </p>
-          <div className="flex gap-6 text-sm text-background/50">
-            <Link to="/privacy" className="hover:text-background transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-background transition-colors">Terms</Link>
-          </div>
         </div>
       </div>
     </footer>

@@ -36,7 +36,7 @@ const sizes = ["XS", "S", "M", "L", "XL", "XXL", "One Size"];
 const iphoneSizes = ["64GB", "128GB", "256GB", "512GB", "1TB"];
 const macbookSizes = ["128GB", "256GB", "512GB", "1TB", "2TB"];
 const watchSizes = ["38mm", "40mm", "41mm", "44mm", "45mm", "49mm"];
-const eras = ["2020s", "2010s", "2000s", "90s", "80s", "70s", "Vintage"];
+// eras removed per user request
 
 export default function Sell() {
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
@@ -228,8 +228,6 @@ export default function Sell() {
           {formData.category && <Badge variant="secondary" className="text-xs">{formData.category}</Badge>}
           {formData.size && <Badge variant="secondary" className="text-xs">{formData.size}</Badge>}
           {formData.condition && <Badge variant="secondary" className="text-xs">{formData.condition}</Badge>}
-          {formData.era && <Badge variant="secondary" className="text-xs">{formData.era}</Badge>}
-          {formData.model && <Badge variant="secondary" className="text-xs">{formData.model}</Badge>}
           {formData.chip && <Badge variant="secondary" className="text-xs">{formData.chip}</Badge>}
           {formData.ram && <Badge variant="secondary" className="text-xs">{formData.ram} RAM</Badge>}
           {formData.batteryHealth && <Badge variant="secondary" className="text-xs">Battery {formData.batteryHealth}%</Badge>}
@@ -241,7 +239,6 @@ export default function Sell() {
         {!compact && (
           <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
             {formData.allowOffers && <span>Offers accepted</span>}
-            {formData.shippingIncluded && <span>Free shipping</span>}
             {formData.localPickup && <span>Local pickup</span>}
           </div>
         )}
@@ -334,7 +331,7 @@ export default function Sell() {
                   List another item
                 </Button>
                 <Link to="/profile">
-                  <Button variant="ghost">Go to profile</Button>
+                  <Button variant="outline">Go to profile</Button>
                 </Link>
               </div>
             </div>
@@ -518,28 +515,16 @@ export default function Sell() {
 
                 {/* iPhone-specific */}
                 {formData.category === "iPhone" && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Model (e.g. 14 Pro, 15)</label>
-                      <input
-                        type="text"
-                        value={formData.model}
-                        onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                        placeholder="e.g. iPhone 14 Pro"
-                        className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Battery health (%)</label>
-                      <input
-                        type="text"
-                        value={formData.batteryHealth}
-                        onChange={(e) => setFormData({ ...formData, batteryHealth: e.target.value })}
-                        placeholder="e.g. 87"
-                        className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-                  </>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Battery health (%)</label>
+                    <input
+                      type="text"
+                      value={formData.batteryHealth}
+                      onChange={(e) => setFormData({ ...formData, batteryHealth: e.target.value })}
+                      placeholder="e.g. 87"
+                      className="w-full h-12 px-4 rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
                 )}
 
                 {/* MacBook-specific */}
@@ -596,23 +581,6 @@ export default function Sell() {
                   </div>
                 </div>
 
-                {/* Era */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">Era (optional)</label>
-                  <div className="flex flex-wrap gap-2">
-                    {eras.map((era) => (
-                      <Button
-                        key={era}
-                        variant={formData.era === era ? "default" : "tag"}
-                        size="sm"
-                        onClick={() => setFormData({ ...formData, era: formData.era === era ? "" : era })}
-                      >
-                        {era}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Description</label>
@@ -643,8 +611,15 @@ export default function Sell() {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
                     <input
                       type="number"
+                      min="1"
                       value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        // Prevent negative values
+                        if (val === "" || Number(val) >= 0) {
+                          setFormData({ ...formData, price: val });
+                        }
+                      }}
                       placeholder="0"
                       className="w-full h-14 pl-8 pr-4 text-2xl font-bold rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     />
@@ -659,13 +634,6 @@ export default function Sell() {
                       <p className="text-sm text-muted-foreground">Let buyers negotiate</p>
                     </div>
                     <input type="checkbox" checked={formData.allowOffers} onChange={(e) => setFormData({ ...formData, allowOffers: e.target.checked })} className="w-5 h-5 rounded border-border text-primary focus:ring-primary" />
-                  </label>
-                  <label className="flex items-center justify-between p-4 rounded-xl bg-muted/30 cursor-pointer">
-                    <div>
-                      <p className="font-medium">Free shipping</p>
-                      <p className="text-sm text-muted-foreground">Include shipping in price</p>
-                    </div>
-                    <input type="checkbox" checked={formData.shippingIncluded} onChange={(e) => setFormData({ ...formData, shippingIncluded: e.target.checked })} className="w-5 h-5 rounded border-border text-primary focus:ring-primary" />
                   </label>
                   <label className="flex items-center justify-between p-4 rounded-xl bg-muted/30 cursor-pointer">
                     <div>
@@ -685,12 +653,12 @@ export default function Sell() {
                       <span>₹{formData.price || 0}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Platform fee (7%)</span>
-                      <span>-₹{Math.round(Number(formData.price) * 0.07)}</span>
+                      <span className="text-muted-foreground">Platform fee (0%)</span>
+                      <span>₹0</span>
                     </div>
                     <div className="border-t border-border pt-2 flex justify-between font-semibold">
                       <span>You'll earn</span>
-                      <span className="text-primary">₹{Math.round(Number(formData.price) * 0.93)}</span>
+                      <span className="text-primary">₹{Number(formData.price) || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -725,14 +693,6 @@ export default function Sell() {
                   ))}
                 </div>
 
-                {/* Terms */}
-                <label className="flex items-start gap-3 p-4 rounded-xl bg-muted/30">
-                  <input type="checkbox" className="w-5 h-5 rounded border-border text-primary focus:ring-primary mt-0.5" />
-                  <span className="text-sm text-muted-foreground">
-                    I confirm this item is authentic and accurately described. I agree to the{" "}
-                    <a href="#" className="text-primary underline">Seller Terms</a>.
-                  </span>
-                </label>
               </div>
             )}
           </motion.div>

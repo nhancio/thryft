@@ -24,13 +24,22 @@ const Index = () => {
             <p className="text-background/70 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base">
               We're here to help. Reach out to us anytime.
             </p>
-            <a
-              href="tel:7095288950"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold shadow-lg hover:opacity-90 transition-opacity"
-            >
-              <Phone className="w-4 h-4" />
-              Contact Us
-            </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href="tel:7095288950"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold shadow-lg hover:opacity-90 transition-opacity"
+              >
+                <Phone className="w-4 h-4" />
+                70952 88950
+              </a>
+              <a
+                href="tel:6304408747"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold shadow-lg hover:opacity-90 transition-opacity"
+              >
+                <Phone className="w-4 h-4" />
+                63044 08747
+              </a>
+            </div>
           </div>
         </div>
       </section>

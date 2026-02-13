@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   Heart,
   Package,
-  Settings,
   CreditCard,
   TrendingUp,
   ShoppingBag,
@@ -19,7 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProducts, useSavedProducts } from "@/hooks/useProducts";
 
 const tabs = [
-  { id: "closet", label: "My Closet", icon: Package },
+  { id: "closet", label: "My Listings", icon: Package },
   { id: "saved", label: "Saved", icon: Heart },
   { id: "purchases", label: "Purchases", icon: ShoppingBag },
   { id: "stats", label: "Stats", icon: TrendingUp },
@@ -80,9 +79,6 @@ export default function Profile() {
                 List Item
               </Button>
             </Link>
-            <Button variant="outline" size="icon">
-              <Settings className="w-4 h-4" />
-            </Button>
             <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sign out">
               <LogOut className="w-4 h-4" />
             </Button>

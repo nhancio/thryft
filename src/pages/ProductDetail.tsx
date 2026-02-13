@@ -20,6 +20,7 @@ import { useSavedProducts } from "@/hooks/useProducts";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { openRazorpayCheckout } from "@/lib/razorpay";
 import {
   Dialog,
   DialogContent,
@@ -93,6 +94,40 @@ export default function ProductDetail() {
       return;
     }
     action();
+  };
+
+  const handleBuyFull = () => {
+    requireAuth(async () => {
+      try {
+        const result = await openRazorpayCheckout({
+          amount: product!.price,
+          productName: product!.title,
+          email: user?.email ?? "",
+          name: user?.user_metadata?.full_name ?? "",
+        });
+        toast.success(`Payment successful! ID: ${result.razorpay_payment_id}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Payment failed";
+        if (msg !== "Payment cancelled") toast.error(msg);
+      }
+    });
+  };
+
+  const handleBookVisit = () => {
+    requireAuth(async () => {
+      try {
+        const result = await openRazorpayCheckout({
+          amount: 1000,
+          productName: `Book visit — ${product!.title}`,
+          email: user?.email ?? "",
+          name: user?.user_metadata?.full_name ?? "",
+        });
+        toast.success(`Booking confirmed! ID: ${result.razorpay_payment_id}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Payment failed";
+        if (msg !== "Payment cancelled") toast.error(msg);
+      }
+    });
   };
 
   const handleShare = () => {
@@ -252,10 +287,10 @@ export default function ProductDetail() {
             <div className="hidden lg:block space-y-3">
               {product.status === "live" && (
                 <div className="flex flex-col gap-2.5">
-                  <Button variant="hero" size="lg" className="w-full shadow-lg text-sm" onClick={() => requireAuth(() => toast.info("Payment flow coming soon"))}>
-                    Pay Full at ₹1,000 discount
+                  <Button variant="hero" size="lg" className="w-full shadow-lg text-sm" onClick={handleBuyFull}>
+                    Buy now · ₹{product.price.toLocaleString()}
                   </Button>
-                  <Button variant="outline" size="lg" className="w-full text-sm" onClick={() => requireAuth(() => toast.info("Booking flow coming soon"))}>
+                  <Button variant="outline" size="lg" className="w-full text-sm" onClick={handleBookVisit}>
                     Pay ₹1,000 and book visit (fully refundable)
                   </Button>
                 </div>
@@ -347,10 +382,10 @@ export default function ProductDetail() {
         <div className="flex items-center gap-2 max-w-lg mx-auto">
           {product.status === "live" && (
             <>
-              <Button variant="hero" size="default" className="flex-1 shadow-lg text-xs sm:text-sm" onClick={() => requireAuth(() => toast.info("Payment flow coming soon"))}>
-                Pay Full · ₹1,000 off
+              <Button variant="hero" size="default" className="flex-1 shadow-lg text-xs sm:text-sm" onClick={handleBuyFull}>
+                Buy now · ₹{product.price.toLocaleString()}
               </Button>
-              <Button variant="outline" size="default" className="flex-1 text-xs sm:text-sm" onClick={() => requireAuth(() => toast.info("Booking flow coming soon"))}>
+              <Button variant="outline" size="default" className="flex-1 text-xs sm:text-sm" onClick={handleBookVisit}>
                 Book visit · ₹1,000
               </Button>
             </>
