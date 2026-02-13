@@ -45,7 +45,7 @@ export function HeroBanner() {
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background z-0" />
 
       {/* Flowing Text Background */}
-      <div className="absolute inset-0 z-10 flex flex-col justify-start pt-10 md:pt-16 gap-0">
+      <div className="absolute top-0 left-0 right-0 z-10 flex flex-col gap-0">
         <MarqueeText text="THRYFT" direction="left" />
         <MarqueeText text="FLEX" direction="right" />
         <MarqueeText text="VIBE" direction="left" />

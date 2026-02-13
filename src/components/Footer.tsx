@@ -50,15 +50,15 @@ export function Footer() {
                 Contact Us
               </a>
               <Link to="/about" className="hover:text-primary transition-colors">About</Link>
-              <Link to="/sustainability" className="hover:text-primary transition-colors">Sustainability</Link>
-              <Link to="/policies" className="hover:text-primary transition-colors">Policies</Link>
+              <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
             </nav>
           </div>
         </div>
 
         <div className="border-t border-background/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-background/50">
-            © 2024 Thryft. All rights reserved.
+            © 2026 Thryft. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-background/50">
             <Link to="/privacy" className="hover:text-background transition-colors">Privacy</Link>
