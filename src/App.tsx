@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import posthog from "posthog-js";
+import { PostHogProvider } from "posthog-js/react";
 import Index from "./pages/Index";
 import Browse from "./pages/Browse";
 import ProductDetail from "./pages/ProductDetail";
@@ -16,6 +18,12 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
+// Initialize PostHog
+posthog.init("phc_r1QPhQP4XaBLcxOOPW8iohsvr1yVVZJRQgh4GY23ybJ", {
+  api_host: "https://us.i.posthog.com",
+  capture_pageview: false, // we capture manually below
+});
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -24,16 +32,27 @@ function ScrollToTop() {
   return null;
 }
 
+/** Capture page views on route change */
+function PostHogPageView() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    posthog.capture("$pageview", { $current_url: window.location.href });
+  }, [pathname]);
+  return null;
+}
+
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
+  <PostHogProvider client={posthog}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <PostHogPageView />
+          <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/browse" element={<Browse />} />
           <Route path="/product/:id" element={<ProductDetail />} />
@@ -47,10 +66,11 @@ const App = () => (
           <Route path="/terms" element={<Terms />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </PostHogProvider>
 );
 
 export default App;
