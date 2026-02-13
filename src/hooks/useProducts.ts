@@ -1,8 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchProductsFromSupabase,
   fetchProductByIdFromSupabase,
   fetchUsersFromSupabase,
+  fetchSavedProductIds,
+  saveProduct,
+  unsaveProduct,
 } from "@/lib/supabase-products";
 import type { Product, UserProfile } from "@/types/product";
 
@@ -67,4 +70,57 @@ export function useUsers(): { users: UserProfile[]; isLoading: boolean } {
     users,
     isLoading: !!SUPABASE_URL && isLoading,
   };
+}
+
+export function useSavedProducts(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  const queryKey = ["saved_products", userId];
+
+  const { data: savedIds = [] } = useQuery({
+    queryKey,
+    queryFn: () => (userId ? fetchSavedProductIds(userId) : Promise.resolve([])),
+    staleTime: 30 * 1000,
+    enabled: !!SUPABASE_URL && !!userId,
+  });
+
+  const save = useMutation({
+    mutationFn: (productId: string) => saveProduct(userId!, productId),
+    onMutate: async (productId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const prev = queryClient.getQueryData<string[]>(queryKey) ?? [];
+      queryClient.setQueryData(queryKey, [...prev, productId]);
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  const unsave = useMutation({
+    mutationFn: (productId: string) => unsaveProduct(userId!, productId),
+    onMutate: async (productId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const prev = queryClient.getQueryData<string[]>(queryKey) ?? [];
+      queryClient.setQueryData(queryKey, prev.filter((id) => id !== productId));
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  const isSaved = (productId: string) => savedIds.includes(productId);
+
+  const toggleSave = (productId: string) => {
+    if (!userId) return;
+    if (isSaved(productId)) {
+      unsave.mutate(productId);
+    } else {
+      save.mutate(productId);
+    }
+  };
+
+  return { savedIds, isSaved, toggleSave };
 }

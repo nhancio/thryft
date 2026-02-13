@@ -19,6 +19,7 @@ export type Database = {
           email: string
           avatar: string | null
           location: string | null
+          wallet_points: number
           created_at: string
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           email: string
           avatar?: string | null
           location?: string | null
+          wallet_points?: number
           created_at?: string
         }
         Update: {
@@ -35,6 +37,27 @@ export type Database = {
           email?: string
           avatar?: string | null
           location?: string | null
+          wallet_points?: number
+          created_at?: string
+        }
+      }
+      saved_products: {
+        Row: {
+          id: string
+          user_id: string
+          product_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          product_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          product_id?: string
           created_at?: string
         }
       }

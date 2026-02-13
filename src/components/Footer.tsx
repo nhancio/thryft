@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { Instagram, Twitter } from "lucide-react";
+import { Instagram, Phone } from "lucide-react";
 
 export function Footer() {
   return (
     <footer className="bg-foreground text-background mt-20">
       <div className="container py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="text-2xl font-display font-bold">
@@ -15,11 +15,13 @@ export function Footer() {
               The Gen Z marketplace for unique finds. Thrifting made fresh, sustainable, and social.
             </p>
             <div className="flex gap-4 mt-6">
-              <a href="#" className="text-background/70 hover:text-primary transition-colors">
+              <a
+                href="https://www.instagram.com/__thryft___/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-background/70 hover:text-primary transition-colors"
+              >
                 <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-background/70 hover:text-primary transition-colors">
-                <Twitter className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -36,23 +38,17 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* Sell */}
-          <div>
-            <h4 className="font-semibold mb-4">Sell</h4>
-            <nav className="flex flex-col gap-2 text-sm text-background/70">
-              <Link to="/sell" className="hover:text-primary transition-colors">List an Item</Link>
-              <Link to="/seller-guide" className="hover:text-primary transition-colors">Seller Guide</Link>
-              <Link to="/shipping" className="hover:text-primary transition-colors">Shipping Info</Link>
-              <Link to="/fees" className="hover:text-primary transition-colors">Fees & Pricing</Link>
-            </nav>
-          </div>
-
           {/* Help */}
           <div>
             <h4 className="font-semibold mb-4">Help</h4>
             <nav className="flex flex-col gap-2 text-sm text-background/70">
-              <Link to="/help" className="hover:text-primary transition-colors">FAQ</Link>
-              <Link to="/contact" className="hover:text-primary transition-colors">Contact Us</Link>
+              <a
+                href="tel:7095288950"
+                className="hover:text-primary transition-colors flex items-center gap-1.5"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                Contact Us
+              </a>
               <Link to="/about" className="hover:text-primary transition-colors">About</Link>
               <Link to="/sustainability" className="hover:text-primary transition-colors">Sustainability</Link>
               <Link to="/policies" className="hover:text-primary transition-colors">Policies</Link>

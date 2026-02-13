@@ -9,6 +9,7 @@ function mapUserRow(row: Tables<"users">): UserProfile {
     email: row.email,
     avatar: row.avatar ?? "",
     location: row.location ?? "",
+    walletPoints: row.wallet_points ?? 0,
   };
 }
 
@@ -126,6 +127,49 @@ export async function upsertUser(user: {
     },
     { onConflict: "id" }
   );
+}
+
+/** Upload an image to Supabase Storage and return its public URL. */
+export async function uploadProductImage(file: File): Promise<string | null> {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `products/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("product-images")
+    .upload(path, file, { cacheControl: "3600", upsert: false });
+  if (error) {
+    console.error("Upload error:", error.message);
+    return null;
+  }
+  const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/** Fetch saved product IDs for a user. */
+export async function fetchSavedProductIds(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("saved_products")
+    .select("product_id")
+    .eq("user_id", userId);
+  if (error || !data) return [];
+  return data.map((r) => r.product_id);
+}
+
+/** Save a product for the current user. */
+export async function saveProduct(userId: string, productId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("saved_products")
+    .insert({ user_id: userId, product_id: productId });
+  return !error;
+}
+
+/** Unsave a product for the current user. */
+export async function unsaveProduct(userId: string, productId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("saved_products")
+    .delete()
+    .eq("user_id", userId)
+    .eq("product_id", productId);
+  return !error;
 }
 
 /** Insert a product listing; listed_by_uid is set from current auth user. */

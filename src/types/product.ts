@@ -8,6 +8,7 @@ export interface UserProfile {
   email: string;
   avatar: string;
   location: string;
+  walletPoints: number;
 }
 
 export interface Product {

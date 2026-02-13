@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { insertProductListing } from "@/lib/supabase-products";
+import { insertProductListing, uploadProductImage } from "@/lib/supabase-products";
 import { toast } from "sonner";
 
 const steps = [
@@ -43,6 +43,7 @@ export default function Sell() {
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -74,10 +75,13 @@ export default function Sell() {
     const files = e.target.files;
     if (!files?.length) return;
     const newUrls: string[] = [];
+    const newFiles: File[] = [];
     for (let i = 0; i < files.length && photos.length + newUrls.length < 6; i++) {
       newUrls.push(URL.createObjectURL(files[i]));
+      newFiles.push(files[i]);
     }
     setPhotos((prev) => [...prev, ...newUrls].slice(0, 6));
+    setPhotoFiles((prev) => [...prev, ...newFiles].slice(0, 6));
     e.target.value = "";
   };
 
@@ -86,6 +90,7 @@ export default function Sell() {
       if (prev[index]?.startsWith("blob:")) URL.revokeObjectURL(prev[index]);
       return prev.filter((_, i) => i !== index);
     });
+    setPhotoFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const nextStep = () => {
@@ -114,10 +119,23 @@ export default function Sell() {
   const handlePublish = async () => {
     setPublishing(true);
     try {
+      // Upload images to Supabase Storage
+      toast.info("Uploading photos...");
+      const uploadedUrls: string[] = [];
+      for (const file of photoFiles) {
+        const url = await uploadProductImage(file);
+        if (url) uploadedUrls.push(url);
+      }
+      if (uploadedUrls.length === 0) {
+        toast.error("Failed to upload photos. Please try again.");
+        setPublishing(false);
+        return;
+      }
+
       const result = await insertProductListing({
         title: formData.title,
         price: Number(formData.price),
-        images: photos, // blob URLs for now; real upload can be added later
+        images: uploadedUrls,
         category: formData.category,
         brand: formData.category, // brand = category (Apple products)
         size: formData.size,
@@ -149,6 +167,7 @@ export default function Sell() {
     setShowPreview(false);
     setCurrentStep(1);
     setPhotos([]);
+    setPhotoFiles([]);
     setFormData({
       title: "",
       category: "",
@@ -640,17 +659,6 @@ export default function Sell() {
                       placeholder="0"
                       className="w-full h-14 pl-8 pr-4 text-2xl font-bold rounded-xl bg-muted/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     />
-                  </div>
-                </div>
-
-                {/* Suggested Price */}
-                <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Suggested price</p>
-                      <p className="text-sm text-muted-foreground">Based on similar items</p>
-                    </div>
-                    <p className="text-xl font-bold">₹1,299 - ₹1,899</p>
                   </div>
                 </div>
 

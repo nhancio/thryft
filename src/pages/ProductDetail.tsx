@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   Heart,
   Share2,
-  MessageCircle,
   Truck,
   MapPin,
   ChevronLeft,
@@ -17,6 +16,8 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProduct } from "@/hooks/useProducts";
+import { useSavedProducts } from "@/hooks/useProducts";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,12 +46,14 @@ const conditionLabel = {
 export default function ProductDetail() {
   const { id } = useParams();
   const [currentImage, setCurrentImage] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [signInPromptOpen, setSignInPromptOpen] = useState(false);
 
   const { product: foundProduct, isLoading } = useProduct(id);
   const product = foundProduct ?? null;
+  const { user, signInWithGoogle } = useAuth();
+  const { isSaved, toggleSave } = useSavedProducts(user?.id);
 
   if (isLoading) {
     return (
@@ -62,6 +65,8 @@ export default function ProductDetail() {
   if (!product) {
     return <Navigate to="/browse" replace />;
   }
+
+  const isLiked = isSaved(product.id);
 
   const discount = product.originalPrice
     ? Math.round(
@@ -79,6 +84,31 @@ export default function ProductDetail() {
     setCurrentImage((prev) =>
       prev === 0 ? product.images.length - 1 : prev - 1
     );
+  };
+
+  /** Gate actions behind sign-in */
+  const requireAuth = (action: () => void) => {
+    if (!user) {
+      setSignInPromptOpen(true);
+      return;
+    }
+    action();
+  };
+
+  const handleShare = () => {
+    const url = `${window.location.origin}/product/${product.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success("Link copied to clipboard!");
+    }).catch(() => {
+      toast.error("Failed to copy link");
+    });
+  };
+
+  const handleSave = () => {
+    requireAuth(() => {
+      toggleSave(product.id);
+      toast.success(isLiked ? "Removed from saved" : "Saved!");
+    });
   };
 
   return (
@@ -221,16 +251,16 @@ export default function ProductDetail() {
             <div className="hidden lg:block space-y-3">
               {product.status === "live" && (
                 <div className="flex flex-col gap-2.5">
-                  <Button variant="hero" size="lg" className="w-full shadow-lg text-sm">
+                  <Button variant="hero" size="lg" className="w-full shadow-lg text-sm" onClick={() => requireAuth(() => toast.info("Payment flow coming soon"))}>
                     Pay Full at ₹1,000 discount
                   </Button>
-                  <Button variant="outline" size="lg" className="w-full text-sm">
+                  <Button variant="outline" size="lg" className="w-full text-sm" onClick={() => requireAuth(() => toast.info("Booking flow coming soon"))}>
                     Pay ₹1,000 and book visit (fully refundable)
                   </Button>
                 </div>
               )}
               {product.status === "hold" && (
-                <Button variant="hero" size="lg" className="w-full shadow-lg" onClick={() => setNotifyOpen(true)}>
+                <Button variant="hero" size="lg" className="w-full shadow-lg" onClick={() => requireAuth(() => setNotifyOpen(true))}>
                   Notify me when available
                 </Button>
               )}
@@ -241,15 +271,11 @@ export default function ProductDetail() {
               )}
 
               <div className="flex items-center gap-2 pt-1">
-                <Button variant="ghost" size="sm" className="flex-1 text-xs" onClick={() => setIsLiked(!isLiked)}>
+                <Button variant="ghost" size="sm" className="flex-1 text-xs" onClick={handleSave}>
                   <Heart className={`w-4 h-4 mr-1.5 ${isLiked ? "fill-destructive text-destructive" : ""}`} />
                   {isLiked ? "Saved" : "Save"}
                 </Button>
-                <Button variant="ghost" size="sm" className="flex-1 text-xs">
-                  <MessageCircle className="w-4 h-4 mr-1.5" />
-                  Message
-                </Button>
-                <Button variant="ghost" size="icon" className="shrink-0">
+                <Button variant="ghost" size="icon" className="shrink-0" onClick={handleShare}>
                   <Share2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -320,16 +346,16 @@ export default function ProductDetail() {
         <div className="flex items-center gap-2 max-w-lg mx-auto">
           {product.status === "live" && (
             <>
-              <Button variant="hero" size="default" className="flex-1 shadow-lg text-xs sm:text-sm">
+              <Button variant="hero" size="default" className="flex-1 shadow-lg text-xs sm:text-sm" onClick={() => requireAuth(() => toast.info("Payment flow coming soon"))}>
                 Pay Full · ₹1,000 off
               </Button>
-              <Button variant="outline" size="default" className="flex-1 text-xs sm:text-sm">
+              <Button variant="outline" size="default" className="flex-1 text-xs sm:text-sm" onClick={() => requireAuth(() => toast.info("Booking flow coming soon"))}>
                 Book visit · ₹1,000
               </Button>
             </>
           )}
           {product.status === "hold" && (
-            <Button variant="hero" size="default" className="flex-1 shadow-lg" onClick={() => setNotifyOpen(true)}>
+            <Button variant="hero" size="default" className="flex-1 shadow-lg" onClick={() => requireAuth(() => setNotifyOpen(true))}>
               Notify me
             </Button>
           )}
@@ -342,11 +368,11 @@ export default function ProductDetail() {
             variant="ghost"
             size="icon"
             className="shrink-0"
-            onClick={() => setIsLiked(!isLiked)}
+            onClick={handleSave}
           >
             <Heart className={`w-5 h-5 ${isLiked ? "fill-destructive text-destructive" : ""}`} />
           </Button>
-          <Button variant="ghost" size="icon" className="shrink-0">
+          <Button variant="ghost" size="icon" className="shrink-0" onClick={handleShare}>
             <Share2 className="w-5 h-5" />
           </Button>
         </div>
@@ -377,6 +403,36 @@ export default function ProductDetail() {
               }}
             >
               Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sign-in prompt dialog */}
+      <Dialog open={signInPromptOpen} onOpenChange={setSignInPromptOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Sign in required</DialogTitle>
+            <DialogDescription>
+              Please sign in to continue. It takes just a few seconds.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2">
+            <Button
+              variant="hero"
+              className="w-full gap-2"
+              onClick={() => {
+                setSignInPromptOpen(false);
+                signInWithGoogle();
+              }}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Login with Google
             </Button>
           </DialogFooter>
         </DialogContent>

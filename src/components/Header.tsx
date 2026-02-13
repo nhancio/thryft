@@ -75,9 +75,11 @@ export function Header() {
               </Button>
             </Link>
 
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Heart className="w-5 h-5" />
-            </Button>
+            <Link to="/profile?tab=saved">
+              <Button variant="ghost" size="icon" className="hidden sm:flex">
+                <Heart className="w-5 h-5" />
+              </Button>
+            </Link>
 
             {user ? (
               <Link to="/profile">
@@ -148,7 +150,7 @@ export function Header() {
                 <Link to="/sell" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2">
                   <Plus className="w-4 h-4" /> Sell
                 </Link>
-                <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2">
+                <Link to="/profile?tab=saved" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2">
                   <Heart className="w-4 h-4" /> Saved
                 </Link>
                 <div className="border-t border-border/50 my-1" />

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Heart,
@@ -16,7 +16,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts, useSavedProducts } from "@/hooks/useProducts";
 
 const tabs = [
   { id: "closet", label: "My Closet", icon: Package },
@@ -26,9 +26,16 @@ const tabs = [
 ];
 
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState("closet");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "closet");
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
   const { user, signInWithGoogle, signOut } = useAuth();
   const { products } = useProducts();
+  const { savedIds } = useSavedProducts(user?.id);
+  const savedProducts = products.filter((p) => savedIds.includes(p.id));
 
   if (!user) {
     return (
@@ -85,10 +92,10 @@ export default function Profile() {
         {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           {[
-            { icon: CreditCard, label: "Wallet", value: "₹12,450", color: "bg-primary/10 text-primary" },
+            { icon: CreditCard, label: "Wallet Points", value: "0", color: "bg-primary/10 text-primary" },
             { icon: Package, label: "Active Listings", value: String(products.filter((p) => p.listedByUid === user.id).length), color: "bg-accent/10 text-accent" },
             { icon: ShoppingBag, label: "Pending Orders", value: "0", color: "bg-sage/20 text-foreground" },
-            { icon: Heart, label: "Saved Items", value: "0", color: "bg-peach-soft text-accent" },
+            { icon: Heart, label: "Saved Items", value: String(savedIds.length), color: "bg-peach-soft text-accent" },
           ].map((item, i) => (
             <motion.div
               key={item.label}
@@ -165,11 +172,34 @@ export default function Profile() {
         )}
 
         {activeTab === "saved" && (
-          <div className="text-center py-12 text-muted-foreground">
-            <Heart className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p>No saved items yet. Browse and save items you like.</p>
-            <Link to="/browse"><Button variant="outline" size="sm" className="mt-4">Browse items</Button></Link>
-          </div>
+          savedProducts.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Heart className="w-12 h-12 mx-auto mb-3 opacity-40" />
+              <p>No saved items yet. Browse and save items you like.</p>
+              <Link to="/browse"><Button variant="outline" size="sm" className="mt-4">Browse items</Button></Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {savedProducts.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="group"
+                >
+                  <Link to={`/product/${product.id}`}>
+                    <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted mb-2">
+                      <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <Badge className="absolute top-2 right-2 capitalize">{product.status}</Badge>
+                    </div>
+                    <h3 className="text-sm font-medium truncate">{product.title}</h3>
+                    <p className="font-semibold">₹{product.price.toLocaleString()}</p>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )
         )}
 
         {activeTab === "purchases" && (
