@@ -1,10 +1,11 @@
 -- Create a public bucket for product images
 insert into storage.buckets (id, name, public) values ('product-images', 'product-images', true)
-on conflict (id) do nothing;
+on conflict (id) do update set public = true;
 
--- Allow anyone to read (public bucket)
+-- Allow ANYONE (including anonymous/non-logged-in users) to read images
 create policy "Allow public read product-images"
   on storage.objects for select
+  to anon, authenticated
   using (bucket_id = 'product-images');
 
 -- Allow authenticated users to upload
