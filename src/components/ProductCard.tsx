@@ -95,14 +95,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 alt={product.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 onError={(e) => {
-                  const imgUrl = product.images[0];
-                  console.error(`[DEBUG] Image FAILED for "${product.title}":`, imgUrl);
-                  // Try fetching the URL to get HTTP status
-                  fetch(imgUrl, { method: "HEAD" }).then((res) => {
-                    console.error(`[DEBUG] HEAD ${imgUrl} → status ${res.status} ${res.statusText}`);
-                  }).catch((err) => {
-                    console.error(`[DEBUG] HEAD fetch error for ${imgUrl}:`, err.message);
-                  });
                   (e.target as HTMLImageElement).src = "/images/placeholder-product.svg";
                 }}
               />
