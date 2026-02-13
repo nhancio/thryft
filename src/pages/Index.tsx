@@ -19,7 +19,7 @@ const Index = () => {
           <div className="text-center py-8 sm:py-12 px-4 sm:px-6 rounded-2xl sm:rounded-3xl bg-foreground text-background">
             <Phone className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-3 sm:mb-4 text-primary" />
             <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold mb-2">
-              Have questions?
+              Any queries? Please reach out
             </h2>
             <p className="text-background/70 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base">
               We're here to help. Reach out to us anytime.

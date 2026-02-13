@@ -1,11 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, Eye, Share2 } from "lucide-react";
+import { Eye, Share2 } from "lucide-react";
 import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useSavedProducts } from "@/hooks/useProducts";
 import { toast } from "sonner";
 import { openRazorpayCheckout } from "@/lib/razorpay";
 import {
@@ -39,13 +38,11 @@ const conditionLabel = {
 } as const;
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
+  const navigate = useNavigate();
   const { user, signInWithGoogle } = useAuth();
-  const { isSaved, toggleSave } = useSavedProducts(user?.id);
   const [signInPromptOpen, setSignInPromptOpen] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
-
-  const liked = isSaved(product.id);
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -57,15 +54,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       return;
     }
     action();
-  };
-
-  const handleSave = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    requireAuth(() => {
-      toggleSave(product.id);
-      toast.success(liked ? "Removed from saved" : "Saved!");
-    });
   };
 
   const handleShare = (e: React.MouseEvent) => {
@@ -131,14 +119,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                   variant="glass"
                   size="icon"
                   className="w-7 h-7"
-                  onClick={handleSave}
-                >
-                  <Heart className={`w-3.5 h-3.5 ${liked ? "fill-destructive text-destructive" : ""}`} />
-                </Button>
-                <Button
-                  variant="glass"
-                  size="icon"
-                  className="w-7 h-7"
                   onClick={handleShare}
                 >
                   <Share2 className="w-3.5 h-3.5" />
@@ -149,7 +129,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               {product.status !== "sold" && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="flex items-center gap-3 text-background text-xs">
-                    <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{product.likes}</span>
                     <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{product.views}</span>
                   </div>
                 </div>
@@ -236,10 +215,14 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 px-2"
-                  onClick={handleSave}
+                  className="h-7 px-2 text-[10px]"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    navigate(`/product/${product.id}`);
+                  }}
                 >
-                  <Heart className={`w-3 h-3 ${liked ? "fill-destructive text-destructive" : ""}`} />
+                  Know more
                 </Button>
               </div>
             </div>

@@ -225,7 +225,7 @@ export default function About() {
         <section className="text-center py-12 rounded-3xl bg-muted/30 border border-border/50">
           <Phone className="w-10 h-10 mx-auto mb-4 text-primary" />
           <h2 className="text-2xl font-display font-bold mb-2">Get in touch</h2>
-          <p className="text-muted-foreground mb-4">Have questions? We'd love to hear from you.</p>
+          <p className="text-muted-foreground mb-4">Any queries? Please reach out.</p>
           <a
             href="tel:7095288950"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:opacity-90 transition-opacity"

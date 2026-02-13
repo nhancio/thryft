@@ -46,7 +46,10 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
-    if (!SUPABASE_URL) return;
+    if (!SUPABASE_URL) {
+      console.warn("Thryft: VITE_SUPABASE_URL is not set; login is disabled.");
+      return;
+    }
     await supabase.auth.signInWithOAuth({ provider: "google" });
   };
 

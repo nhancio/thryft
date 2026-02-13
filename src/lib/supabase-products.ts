@@ -172,12 +172,17 @@ export async function fetchSavedProductIds(userId: string): Promise<string[]> {
   return data.map((r) => r.product_id);
 }
 
-/** Save a product for the current user. */
+/** Save a product for the current user. Idempotent: duplicate save is treated as success. */
 export async function saveProduct(userId: string, productId: string): Promise<boolean> {
   const { error } = await supabase
     .from("saved_products")
     .insert({ user_id: userId, product_id: productId });
-  return !error;
+  if (error) {
+    // 23505 = unique_violation — already saved
+    if (error.code === "23505") return true;
+    return false;
+  }
+  return true;
 }
 
 /** Unsave a product for the current user. */

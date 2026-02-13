@@ -1,21 +1,21 @@
 import { motion } from "framer-motion";
-import cardRoyal from "@/assets/card-royal.jpg";
-import cardSave from "@/assets/card-save.jpg";
-import cardExperiences from "@/assets/card-experiences.jpg";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const cards = [
   {
-    image: cardRoyal,
-    message: "Live the royal life, Now",
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800",
+    line1: "Live the royal life,",
+    line2: "Now",
   },
   {
-    image: cardSave,
-    message: "Thrift, Not Spend",
+    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800",
+    line1: "Thrift, Not Spend",
+    line2: "Save more.",
   },
   {
-    image: cardExperiences,
-    message: "Unlock the experiences, in the reach",
+    image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800",
+    line1: "Unlock the experiences,",
+    line2: "in reach",
   },
 ];
 
@@ -99,14 +99,23 @@ export function HeroBanner() {
                       <div className="relative bg-black/5 h-full" style={{ maxHeight: "calc(100dvh - 14rem)" }}>
                         <img
                           src={card.image}
-                          alt={card.message}
+                          alt={`${card.line1} ${card.line2}`}
                           className="w-full h-full object-cover"
                           style={{ minHeight: "180px" }}
+                          onError={(e) => {
+                            const t = e.target as HTMLImageElement;
+                            if (!t.dataset.fallback) {
+                              t.dataset.fallback = "1";
+                              t.src = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800";
+                            }
+                          }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
-                        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 md:p-6 text-center">
-                          <p className="text-white text-base sm:text-lg md:text-xl font-bold leading-tight font-display tracking-wide antialiased">
-                            {card.message}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-6 text-center">
+                          <p className="text-white text-base sm:text-lg md:text-xl font-bold leading-tight font-display tracking-wide antialiased drop-shadow-lg">
+                            <span className="text-primary-foreground">{card.line1}</span>
+                            <br />
+                            <span className="text-primary">{card.line2}</span>
                           </p>
                         </div>
                       </div>
