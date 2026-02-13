@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { insertProductListing } from "@/lib/supabase-products";
+import { toast } from "sonner";
 
 const steps = [
   { id: 1, title: "Category", description: "Choose product type" },
@@ -43,6 +45,7 @@ export default function Sell() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -105,6 +108,39 @@ export default function Sell() {
         return formData.price && Number(formData.price) > 0;
       default:
         return true;
+    }
+  };
+
+  const handlePublish = async () => {
+    setPublishing(true);
+    try {
+      const result = await insertProductListing({
+        title: formData.title,
+        price: Number(formData.price),
+        images: photos, // blob URLs for now; real upload can be added later
+        category: formData.category,
+        brand: formData.category, // brand = category (Apple products)
+        size: formData.size,
+        condition: formData.condition.toLowerCase().replace(/ /g, "-") as string,
+        era: formData.era || null,
+        description: formData.description || "",
+        tags: [formData.category.toLowerCase(), formData.size.toLowerCase()].filter(Boolean),
+        allow_offers: formData.allowOffers,
+        shipping_cost: formData.shippingIncluded ? 0 : 99,
+        local_pickup: formData.localPickup,
+        status: "live",
+      });
+
+      if ("error" in result) {
+        toast.error("Failed to publish: " + result.error);
+      } else {
+        toast.success("Listing published successfully!");
+        setSubmitted(true);
+      }
+    } catch (err) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -718,8 +754,8 @@ export default function Sell() {
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (
-            <Button variant="hero" disabled={!canProceed()} onClick={() => setSubmitted(true)}>
-              Publish Listing
+            <Button variant="hero" disabled={!canProceed() || publishing} onClick={handlePublish}>
+              {publishing ? "Publishing..." : "Publish Listing"}
               <Sparkles className="w-4 h-4 ml-2" />
             </Button>
           )}

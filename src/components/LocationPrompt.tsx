@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,12 +9,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const LOCATION_KEY = "thryft_user_location";
 
 export function getStoredLocation(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(LOCATION_KEY);
+}
+
+async function saveLocationToSupabase(location: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase
+    .from("users")
+    .update({ location })
+    .eq("id", user.id);
 }
 
 export function LocationPrompt({
@@ -31,6 +41,7 @@ export function LocationPrompt({
   const saveLocation = (location: string) => {
     if (!location.trim()) return;
     localStorage.setItem(LOCATION_KEY, location.trim());
+    saveLocationToSupabase(location.trim());
     onClose();
   };
 
@@ -43,11 +54,25 @@ export function LocationPrompt({
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const { latitude, longitude } = pos.coords;
-        // Reverse geocode could be done with a service; for now store coords or use a simple display
-        const location = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-        saveLocation(location);
+        // Try reverse geocoding with a free API
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+          );
+          const data = await res.json();
+          const addr = data.address;
+          const city = addr?.city || addr?.town || addr?.village || addr?.county || "";
+          const state = addr?.state || "";
+          const country = addr?.country || "";
+          const parts = [city, state, country].filter(Boolean);
+          const location = parts.length > 0 ? parts.join(", ") : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          saveLocation(location);
+        } catch {
+          // Fallback to coords
+          saveLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        }
         setLoading(false);
       },
       () => {

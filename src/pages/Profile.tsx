@@ -9,7 +9,7 @@ import {
   TrendingUp,
   ShoppingBag,
   Plus,
-  ChevronRight,
+  LogOut,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -27,7 +27,7 @@ const tabs = [
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("closet");
-  const { user, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, signOut } = useAuth();
   const { products } = useProducts();
 
   if (!user) {
@@ -75,6 +75,9 @@ export default function Profile() {
             </Link>
             <Button variant="outline" size="icon">
               <Settings className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sign out">
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
