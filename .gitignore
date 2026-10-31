@@ -55,3 +55,6 @@ coverage
 .cache
 .parcel-cache
 .turbo
+
+# Videos and marketing content live here; never committed.
+/content/
