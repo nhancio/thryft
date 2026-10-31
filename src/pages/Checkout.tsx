@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -15,13 +15,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/hooks/useAuth";
+import { SignInDialog } from "@/components/SignInDialog";
+import { openRazorpayCheckout } from "@/lib/razorpay";
+import { createOrder, markOrderPaid, cancelOrder } from "@/lib/orders";
+import type { ShippingAddress } from "@/lib/orders";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
+  const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const totalShipping = items.reduce(
     (sum, item) => sum + item.product.shippingCost,
@@ -29,17 +39,100 @@ export default function Checkout() {
   );
   const grandTotal = totalPrice + totalShipping;
 
+  /** Collect form fields into a ShippingAddress object. */
+  function getShippingAddress(): ShippingAddress | null {
+    const form = formRef.current;
+    if (!form || !form.checkValidity()) {
+      form?.reportValidity();
+      return null;
+    }
+    const fd = new FormData(form);
+    return {
+      firstName: (fd.get("firstName") as string).trim(),
+      lastName: (fd.get("lastName") as string).trim(),
+      email: (fd.get("email") as string).trim(),
+      phone: (fd.get("phone") as string).trim(),
+      address: (fd.get("address") as string).trim(),
+      city: (fd.get("city") as string).trim(),
+      state: (fd.get("state") as string).trim(),
+      pincode: (fd.get("pincode") as string).trim(),
+      country: (fd.get("country") as string).trim(),
+    };
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user) {
+      setShowSignIn(true);
+      return;
+    }
+
+    const shippingAddress = getShippingAddress();
+    if (!shippingAddress) return;
+
     setIsProcessing(true);
 
-    // Simulate order processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Create one order per cart item
+    const orderIds: string[] = [];
+    try {
+      for (const item of items) {
+        const result = await createOrder({
+          productId: item.product.id,
+          amount: item.product.price * item.quantity + item.product.shippingCost,
+          shippingAddress,
+        });
+        if ("error" in result) {
+          toast.error(`Failed to create order: ${result.error}`);
+          setIsProcessing(false);
+          return;
+        }
+        orderIds.push(result.id);
+      }
 
-    setIsProcessing(false);
-    setOrderPlaced(true);
-    clearCart();
-    toast.success("Order placed successfully!");
+      // Build description for Razorpay
+      const description =
+        items.length === 1
+          ? items[0].product.title
+          : `${items.length} items from Thryft`;
+
+      // Open Razorpay checkout
+      const paymentResult = await openRazorpayCheckout({
+        amount: grandTotal,
+        productName: description,
+        email: shippingAddress.email,
+        phone: shippingAddress.phone,
+        name: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
+      });
+
+      // Mark all orders as paid
+      for (const orderId of orderIds) {
+        await markOrderPaid({
+          orderId,
+          razorpayPaymentId: paymentResult.razorpay_payment_id,
+          razorpayOrderId: paymentResult.razorpay_order_id,
+          razorpaySignature: paymentResult.razorpay_signature,
+        });
+      }
+
+      // Invalidate orders cache so profile shows them
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+
+      setOrderPlaced(true);
+      clearCart();
+      toast.success("Payment successful! Order confirmed.");
+    } catch (err) {
+      // Payment was cancelled or failed -- cancel the pending orders
+      for (const orderId of orderIds) {
+        await cancelOrder(orderId);
+      }
+      const message = err instanceof Error ? err.message : "Payment failed";
+      if (message !== "Payment cancelled") {
+        toast.error(message);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (orderPlaced) {
@@ -67,7 +160,7 @@ export default function Checkout() {
                 <Link to="/browse">Continue Shopping</Link>
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <Link to="/profile">View Orders</Link>
+                <Link to="/profile?tab=purchases">View Orders</Link>
               </Button>
             </div>
           </motion.div>
@@ -105,6 +198,7 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <SignInDialog open={showSignIn} onOpenChange={setShowSignIn} onSignIn={signInWithGoogle} />
 
       <main className="container py-6">
         {/* Back Link */}
@@ -121,7 +215,7 @@ export default function Checkout() {
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Form Section */}
           <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
               {/* Shipping Address */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -137,6 +231,7 @@ export default function Checkout() {
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
+                      name="firstName"
                       placeholder="First name"
                       required
                       className="rounded-xl"
@@ -146,6 +241,7 @@ export default function Checkout() {
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
+                      name="lastName"
                       placeholder="Last name"
                       required
                       className="rounded-xl"
@@ -155,8 +251,10 @@ export default function Checkout() {
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       placeholder="email@example.com"
+                      defaultValue={user?.email ?? ""}
                       required
                       className="rounded-xl"
                     />
@@ -165,6 +263,7 @@ export default function Checkout() {
                     <Label htmlFor="phone">Phone</Label>
                     <Input
                       id="phone"
+                      name="phone"
                       type="tel"
                       placeholder="+91 98765 43210"
                       required
@@ -175,6 +274,7 @@ export default function Checkout() {
                     <Label htmlFor="address">Address</Label>
                     <Input
                       id="address"
+                      name="address"
                       placeholder="Street address"
                       required
                       className="rounded-xl"
@@ -184,6 +284,7 @@ export default function Checkout() {
                     <Label htmlFor="city">City</Label>
                     <Input
                       id="city"
+                      name="city"
                       placeholder="City"
                       required
                       className="rounded-xl"
@@ -193,6 +294,7 @@ export default function Checkout() {
                     <Label htmlFor="state">State</Label>
                     <Input
                       id="state"
+                      name="state"
                       placeholder="State"
                       required
                       className="rounded-xl"
@@ -202,6 +304,7 @@ export default function Checkout() {
                     <Label htmlFor="pincode">Pincode</Label>
                     <Input
                       id="pincode"
+                      name="pincode"
                       placeholder="400001"
                       required
                       className="rounded-xl"
@@ -211,6 +314,7 @@ export default function Checkout() {
                     <Label htmlFor="country">Country</Label>
                     <Input
                       id="country"
+                      name="country"
                       placeholder="India"
                       defaultValue="India"
                       required
@@ -229,14 +333,15 @@ export default function Checkout() {
               >
                 <h2 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-primary" />
-                  Payment Method
+                  Payment
                 </h2>
                 <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
                   <p className="text-sm font-medium text-primary">
-                    Cash on Delivery
+                    Razorpay Secure Payment
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Pay when your order arrives. No advance payment required.
+                    UPI, cards, net banking, wallets -- all payment methods supported.
+                    You'll be redirected to Razorpay's secure checkout.
                   </p>
                 </div>
               </motion.div>
@@ -262,7 +367,7 @@ export default function Checkout() {
                     Processing...
                   </span>
                 ) : (
-                  `Place Order · ₹${grandTotal.toLocaleString()}`
+                  `Pay Now · ₹${grandTotal.toLocaleString()}`
                 )}
               </Button>
             </form>

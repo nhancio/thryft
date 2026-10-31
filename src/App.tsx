@@ -20,6 +20,8 @@ const Collections = lazy(() => import("./pages/Collections"));
 const About = lazy(() => import("./pages/About"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Initialize PostHog
@@ -75,6 +77,8 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/categories" element={<Collections />} />
             <Route path="/collections" element={<Navigate to="/categories" replace />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/orders/:id" element={<OrderDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />

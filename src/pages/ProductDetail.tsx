@@ -22,8 +22,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { openRazorpayCheckout } from "@/lib/razorpay";
+import { createOrder, markOrderPaid, cancelOrder } from "@/lib/orders";
 import { SignInDialog } from "@/components/SignInDialog";
 import { conditionVariant, conditionLabel, handleImgError } from "@/lib/constants";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +50,7 @@ export default function ProductDetail() {
   const product = foundProduct ?? null;
   const { user, signInWithGoogle } = useAuth();
   const { isSaved, toggleSave } = useSavedProducts(user?.id);
+  const queryClient = useQueryClient();
 
   const visitSlots = useMemo(() => {
     const slots: string[] = [];
@@ -104,15 +107,44 @@ export default function ProductDetail() {
 
   const handleBuyFull = () => {
     requireAuth(async () => {
+      // Create a pending order
+      const orderResult = await createOrder({
+        productId: product.id,
+        amount: product.price + product.shippingCost,
+        shippingAddress: {
+          firstName: user?.user_metadata?.full_name?.split(" ")[0] ?? "",
+          lastName: user?.user_metadata?.full_name?.split(" ").slice(1).join(" ") ?? "",
+          email: user?.email ?? "",
+          phone: "",
+          address: "",
+          city: "",
+          state: "",
+          pincode: "",
+          country: "India",
+        },
+      });
+      if ("error" in orderResult) {
+        toast.error(`Failed to create order: ${orderResult.error}`);
+        return;
+      }
+
       try {
         const result = await openRazorpayCheckout({
-          amount: product.price,
+          amount: product.price + product.shippingCost,
           productName: product.title,
           email: user?.email ?? "",
           name: user?.user_metadata?.full_name ?? "",
         });
-        toast.success(`Payment successful! ID: ${result.razorpay_payment_id}`);
+        await markOrderPaid({
+          orderId: orderResult.id,
+          razorpayPaymentId: result.razorpay_payment_id,
+          razorpayOrderId: result.razorpay_order_id,
+          razorpaySignature: result.razorpay_signature,
+        });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        toast.success("Payment successful! Order confirmed.");
       } catch (err: unknown) {
+        await cancelOrder(orderResult.id);
         const msg = err instanceof Error ? err.message : "Payment failed";
         if (msg !== "Payment cancelled") toast.error(msg);
       }

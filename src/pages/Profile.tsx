@@ -18,7 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useProducts, useSavedProducts } from "@/hooks/useProducts";
-import { handleImgError } from "@/lib/constants";
+import { useUserOrders } from "@/hooks/useOrders";
+import { handleImgError, PLACEHOLDER_IMG } from "@/lib/constants";
+import type { OrderStatus } from "@/lib/orders";
 import { deleteProductListing } from "@/lib/supabase-products";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -40,6 +42,7 @@ export default function Profile() {
   const { user, signInWithGoogle, signOut, authError } = useAuth();
   const { products } = useProducts();
   const { savedIds } = useSavedProducts(user?.id);
+  const { data: orders = [] } = useUserOrders(user?.id);
   const queryClient = useQueryClient();
 
   const handleDelete = async (productId: string, title: string) => {
@@ -136,7 +139,7 @@ export default function Profile() {
           {[
             { icon: CreditCard, label: "Wallet Points", value: "0", color: "bg-primary/10 text-primary" },
             { icon: Package, label: "Active Listings", value: String(products.filter((p) => p.listedByUid === user.id).length), color: "bg-accent/10 text-accent" },
-            { icon: ShoppingBag, label: "Pending Orders", value: "0", color: "bg-sage/20 text-foreground" },
+            { icon: ShoppingBag, label: "Orders", value: String(orders.length), color: "bg-sage/20 text-foreground" },
             { icon: Heart, label: "Saved Items", value: String(savedIds.length), color: "bg-peach-soft text-accent" },
           ].map((item, i) => (
             <motion.div
@@ -273,11 +276,64 @@ export default function Profile() {
         )}
 
         {activeTab === "purchases" && (
-          <div className="text-center py-12 text-muted-foreground">
-            <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p>No purchases yet.</p>
-            <Link to="/browse"><Button variant="outline" size="sm" className="mt-4">Start shopping</Button></Link>
-          </div>
+          orders.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-40" />
+              <p>No purchases yet.</p>
+              <Link to="/browse"><Button variant="outline" size="sm" className="mt-4">Start shopping</Button></Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {orders.map((order, i) => {
+                const statusColors: Record<OrderStatus, string> = {
+                  pending: "bg-yellow-100 text-yellow-700",
+                  paid: "bg-green-100 text-green-700",
+                  shipped: "bg-blue-100 text-blue-700",
+                  delivered: "bg-primary/10 text-primary",
+                  cancelled: "bg-red-100 text-red-700",
+                };
+                const productImg = order.product?.images?.[0] ?? PLACEHOLDER_IMG;
+                return (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <Link
+                      to={`/orders/${order.id}`}
+                      className="flex gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors"
+                    >
+                      <img
+                        src={productImg}
+                        alt={order.product?.title ?? "Product"}
+                        className="w-16 h-20 object-cover rounded-lg"
+                        onError={handleImgError}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {order.product?.title ?? "Product"}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(order.created_at).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="font-bold text-sm">{"\u20B9"}{order.amount.toLocaleString()}</span>
+                          <Badge className={`${statusColors[order.status]} text-xs capitalize`}>
+                            {order.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )
         )}
 
         {activeTab === "stats" && (

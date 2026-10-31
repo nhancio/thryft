@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Grid3X3, LayoutGrid, X } from "lucide-react";
+import { Grid3X3, LayoutGrid, X, Search } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { CATEGORY_FILTERS as categories } from "@/types/product";
 import { cn } from "@/lib/utils";
 import { useProducts } from "@/hooks/useProducts";
@@ -16,21 +17,52 @@ const VALID_CATEGORIES = ["All", "iPhone", "iPad", "MacBook", "Mac Mini", "iMac"
 export default function Browse() {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get("category") ?? "All";
+  const searchQueryFromUrl = searchParams.get("q") ?? "";
   const { products, isLoading, categoryCounts } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState(
     VALID_CATEGORIES.includes(categoryFromUrl) ? categoryFromUrl : "All"
   );
+  const [searchQuery, setSearchQuery] = useState(searchQueryFromUrl);
   const [gridView, setGridView] = useState<2 | 3>(2);
 
+  // Sync from URL params
   useEffect(() => {
-    const q = searchParams.get("category");
-    if (q && VALID_CATEGORIES.includes(q)) setSelectedCategory(q);
+    const cat = searchParams.get("category");
+    if (cat && VALID_CATEGORIES.includes(cat)) setSelectedCategory(cat);
+    const q = searchParams.get("q") ?? "";
+    setSearchQuery(q);
   }, [searchParams]);
 
-  const filteredProducts =
-    selectedCategory === "All"
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+  /** Search products by matching query against title, brand, category, tags, description. */
+  const filteredProducts = useMemo(() => {
+    let result = products;
+
+    // Category filter
+    if (selectedCategory !== "All") {
+      result = result.filter((p) => p.category === selectedCategory);
+    }
+
+    // Search filter
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      const terms = q.split(/\s+/);
+      result = result.filter((product) => {
+        const haystack = [
+          product.title,
+          product.brand,
+          product.category,
+          product.subcategory,
+          product.description,
+          ...(product.tags ?? []),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return terms.every((term) => haystack.includes(term));
+      });
+    }
+
+    return result;
+  }, [products, selectedCategory, searchQuery]);
 
   const setCategory = (cat: string) => {
     setSelectedCategory(cat);
@@ -43,8 +75,33 @@ export default function Browse() {
     setSearchParams(next, { replace: true });
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const next = new URLSearchParams(searchParams);
+    const q = searchQuery.trim();
+    if (q) {
+      next.set("q", q);
+    } else {
+      next.delete("q");
+    }
+    setSearchParams(next, { replace: true });
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    const next = new URLSearchParams(searchParams);
+    next.delete("q");
+    setSearchParams(next, { replace: true });
+  };
+
   const clearCategory = () => setCategory("All");
-  const hasActiveFilters = selectedCategory !== "All";
+  const hasActiveFilters = selectedCategory !== "All" || searchQuery.trim().length > 0;
+
+  const clearAllFilters = () => {
+    setSelectedCategory("All");
+    setSearchQuery("");
+    setSearchParams({}, { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,6 +115,27 @@ export default function Browse() {
             {isLoading ? "Loading..." : `${products.length} unique finds waiting for you`}
           </p>
         </div>
+
+        {/* Search Bar */}
+        <form onSubmit={handleSearchSubmit} className="relative mb-4">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, brand, category..."
+            className="pl-10 pr-10 rounded-full h-11 bg-muted/30 border-border focus:bg-background"
+          />
+          {searchQuery.trim() && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </form>
 
         {/* Filter Bar */}
         <div className="flex items-center gap-2 sm:gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
@@ -82,14 +160,22 @@ export default function Browse() {
             animate={{ opacity: 1, height: "auto" }}
             className="flex flex-wrap gap-2 mb-4"
           >
-            <Badge variant="secondary" className="gap-1">
-              {selectedCategory}
-              <X className="w-3 h-3 cursor-pointer" onClick={clearCategory} />
-            </Badge>
+            {selectedCategory !== "All" && (
+              <Badge variant="secondary" className="gap-1">
+                {selectedCategory}
+                <X className="w-3 h-3 cursor-pointer" onClick={clearCategory} />
+              </Badge>
+            )}
+            {searchQuery.trim() && (
+              <Badge variant="secondary" className="gap-1">
+                Search: {searchQuery.trim()}
+                <X className="w-3 h-3 cursor-pointer" onClick={clearSearch} />
+              </Badge>
+            )}
             <Button
               variant="ghost"
               size="sm"
-              onClick={clearCategory}
+              onClick={clearAllFilters}
               className="text-destructive hover:text-destructive"
             >
               Clear all
@@ -137,6 +223,20 @@ export default function Browse() {
                 <ProductCard key={product.id} product={product} index={i} />
               ))}
             </div>
+
+            {/* No results */}
+            {!isLoading && filteredProducts.length === 0 && (
+              <div className="text-center py-16">
+                <Search className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-40" />
+                <p className="text-muted-foreground mb-2">No products found</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Try a different search term or clear your filters.
+                </p>
+                <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                  Clear all filters
+                </Button>
+              </div>
+            )}
 
             {/* End of results */}
             {filteredProducts.length > 0 && (
